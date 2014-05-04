@@ -2,7 +2,7 @@
 
 /*
 Plugin Name: LVL99 Database Sync
-Plugin URI: http://www.lvl99.com/code/lvl99-dbs/
+Plugin URI: http://www.lvl99.com/code/database-sync/
 Description: Allows you to easily save your WP database to an SQL file, and to also restore a database from an SQL file.
 Author: Matt Scheurich
 Author URI: http://www.lvl99.com/
