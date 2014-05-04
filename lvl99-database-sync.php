@@ -382,7 +382,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			if ( file_exists($maintenance) ) return;
 			
 			// If maintenance file doesn't exist, create a new blank one to use
-			if ( !file_exists($_maintenance) ) $f_maintenance = fopen( $_maintenance, 'r' );
+			if ( !file_exists($_maintenance) ) $f_maintenance = fopen( $_maintenance, 'w' );
 			
 			// Copy the template to WP's abspath
 			copy( $_maintenance, $maintenance );
