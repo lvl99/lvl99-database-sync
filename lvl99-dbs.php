@@ -108,8 +108,6 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			add_action( 'admin_menu', array( &$this, 'admin_menu' ) );
 			add_action( 'admin_notices', array( &$this, 'admin_notices' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), array( &$this, 'admin_plugin_links' ) );
-			
-			$this->enable_maintenance();
 		}
 		
 		/*
