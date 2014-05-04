@@ -1,7 +1,7 @@
 LVL99 Database Sync
 ===================
 
-LVL99 Database Sync is a WordPress plugin which allows you to easily save your WP database to an SQL file, and to also restore the database from an SQL file.
+*LVL99 Database Sync* is a WordPress plugin which allows you to easily save your WP database to an SQL file, and to also restore the database from an SQL file.
 
 Created and maintained by [Matt Scheurich](http://www.lvl99.com)
 
@@ -10,4 +10,4 @@ It's creation was inspired by how I manage WP site development. I often have a l
 Since I also use [git](http://git-scm.com/) I can use that to watch the directory where the SQL files are located and using a file naming scheme I can save and restore per development environment.
 
 * Visit [lvl99.com/code/database-sync](http://lvl99.com/code/database-sync) for news and updates
-* Fork development of this plugin at [github.com/lvl99/lvl99-database-sync](github.com/lvl99/lvl99-database-sync)
+* Fork development of this plugin at [github.com/lvl99/lvl99-database-sync](http://github.com/lvl99/lvl99-database-sync)
