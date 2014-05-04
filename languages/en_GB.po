@@ -1,0 +1,238 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: LVL99 Database Sync\n"
+"POT-Creation-Date: 2014-05-04 19:50+1000\n"
+"PO-Revision-Date: 2014-05-04 19:52+1000\n"
+"Last-Translator: \n"
+"Language-Team: LVL99 <matt@lvl99.com>\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.5\n"
+"X-Poedit-Basepath: ./\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_x;_ex;_n;_nx\n"
+"X-Poedit-SearchPath-0: ..\n"
+
+#: ../lvl99-db-sync.php:117
+msgid ""
+"Error: You must have administrator privileges to operate this functionality"
+msgstr ""
+
+#: ../lvl99-db-sync.php:241
+msgid "SQL file folder path"
+msgstr ""
+
+#: ../lvl99-db-sync.php:242
+msgid ""
+"The folder must already be created for you to successfully reference it here "
+"and have permissions for PHP to write to.<br/>Consider referencing to a "
+"folder that exists outside your www/public_html folder"
+msgstr ""
+
+#: ../lvl99-db-sync.php:248
+msgid "SQL file name format"
+msgstr ""
+
+#: ../lvl99-db-sync.php:249
+msgid "Tags you can use within the file name:"
+msgstr ""
+
+#: ../lvl99-db-sync.php:250
+msgid ""
+"Replace <code>...</code> with a string representing the date output "
+"according to <a href=\"http://au1.php.net/manual/en/function.date.php\" "
+"target=\"_blank\">PHP's date() function</a>"
+msgstr ""
+
+#: ../lvl99-db-sync.php:251
+msgid ""
+"The environment that the site is running in (references constant "
+"<code>WP_ENV</code>)"
+msgstr ""
+
+#: ../lvl99-db-sync.php:252
+msgid "The name of the database"
+msgstr ""
+
+#: ../lvl99-db-sync.php:253
+msgid "The URL of the website (references constant <code>WP_HOME</code>)"
+msgstr ""
+
+#: ../lvl99-db-sync.php:259
+msgid "No compression"
+msgstr ""
+
+#: ../lvl99-db-sync.php:263
+msgid "GZIP"
+msgstr ""
+
+#: ../lvl99-db-sync.php:269
+msgid "Default file compression format"
+msgstr ""
+
+#: ../lvl99-db-sync.php:413
+#, php-format
+msgid "LVL99_DBS Error: %s"
+msgstr ""
+
+#: ../lvl99-db-sync.php:455
+msgid "Error: Invalid path set"
+msgstr ""
+
+#: ../lvl99-db-sync.php:617
+#, php-format
+msgid "Database was successfully backed up to <strong><code>%s</code></strong>"
+msgstr ""
+
+#: ../lvl99-db-sync.php:643 ../lvl99-db-sync.php:744
+#, php-format
+msgid "File does not exist at <strong><code>%s</code></strong>"
+msgstr ""
+
+#: ../lvl99-db-sync.php:682
+#, php-format
+msgid ""
+"Database was successfully restored from <strong><code>%s</code></strong>. If "
+"you have a caching plugin, it is recommended you flush your database cache "
+"now."
+msgstr ""
+
+#: ../lvl99-db-sync.php:686
+#, php-format
+msgid ""
+"Database was successfully restored from <strong><code>%s</code></strong>"
+msgstr ""
+
+#: ../lvl99-db-sync.php:702 ../lvl99-db-sync.php:735
+msgid "No file was selected"
+msgstr ""
+
+#: ../lvl99-db-sync.php:711
+#, php-format
+msgid "<strong><code>%s</code></strong> does not exist on the server."
+msgstr ""
+
+#: ../lvl99-db-sync.php:751
+#, php-format
+msgid "<strong><code>%s</code></strong> was successfully deleted"
+msgstr ""
+
+#: ../lvl99-db-sync.php:756
+#, php-format
+msgid ""
+"Could not remove <strong><code>%s</code></strong> from the server. Please "
+"check file and folder permissions"
+msgstr ""
+
+#: ../lvl99-db-sync.php:818
+#, php-format
+msgid "Invalid route method was called: <strong><code>%s</code></strong>"
+msgstr ""
+
+#: ../lvl99-db-sync.php:864
+msgid "No file was selected nor uploaded."
+msgstr ""
+
+#: ../lvl99-db-sync.php:891
+msgid "PHP files may not be uploaded."
+msgstr ""
+
+#: ../lvl99-db-sync.php:898
+#, php-format
+msgid "<strong><code>%s</code></strong> was successfully uploaded."
+msgstr ""
+
+#: ../lvl99-db-sync.php:903
+msgid "Could not upload the file. Please check your server's permissions."
+msgstr ""
+
+#: ../lvl99-db-sync.php:952 ../lvl99-db-sync.php:953
+#: ../views/admin-help.php:13 ../views/admin-load.php:11
+#: ../views/admin-options.php:13 ../views/admin-save.php:12
+msgid "Database Sync"
+msgstr ""
+
+#: ../views/admin-help.php:16 ../views/admin-load.php:14
+#: ../views/admin-options.php:16 ../views/admin-save.php:15
+msgid "Save"
+msgstr ""
+
+#: ../views/admin-help.php:17 ../views/admin-load.php:15
+#: ../views/admin-options.php:17 ../views/admin-save.php:16
+msgid "Load"
+msgstr ""
+
+#: ../views/admin-help.php:18 ../views/admin-load.php:16
+#: ../views/admin-options.php:18 ../views/admin-save.php:17
+msgid "Options"
+msgstr ""
+
+#: ../views/admin-help.php:19 ../views/admin-load.php:17
+#: ../views/admin-options.php:19 ../views/admin-save.php:18
+msgid "Help"
+msgstr ""
+
+#: ../views/admin-load.php:24
+msgid ""
+"Restores database tables from a selected file. Please note that this will "
+"overwrite your existing database tables."
+msgstr ""
+
+#: ../views/admin-load.php:30
+msgid "Select SQL file"
+msgstr ""
+
+#: ../views/admin-load.php:35 ../views/admin-load.php:57
+msgid "File"
+msgstr ""
+
+#: ../views/admin-load.php:36 ../views/admin-load.php:58
+msgid "Controls"
+msgstr ""
+
+#: ../views/admin-load.php:49
+msgid "Download"
+msgstr ""
+
+#: ../views/admin-load.php:50
+msgid "Delete"
+msgstr ""
+
+#: ../views/admin-load.php:65
+msgid "Load selected SQL File"
+msgstr ""
+
+#: ../views/admin-load.php:69
+msgid "Upload SQL file"
+msgstr ""
+
+#: ../views/admin-load.php:71
+msgid "Upload SQL File"
+msgstr ""
+
+#: ../views/admin-options.php:24
+msgid "Configure Database Sync's default properties and behaviours."
+msgstr ""
+
+#: ../views/admin-save.php:25
+msgid "Saves your WP database to an SQL file."
+msgstr ""
+
+#: ../views/admin-save.php:30
+msgid "Select tables to save to SQL"
+msgstr ""
+
+#: ../views/admin-save.php:33
+msgid "Back up all tables"
+msgstr ""
+
+#: ../views/admin-save.php:36
+msgid "Back up only selected tables"
+msgstr ""
+
+#: ../views/admin-save.php:59
+msgid "Save SQL File"
+msgstr ""

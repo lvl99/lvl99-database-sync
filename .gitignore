@@ -1,0 +1,7 @@
+!.gitignore
+!.maintenance
+
+.DS_Store
+Thumbs.db
+.directory
+
