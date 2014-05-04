@@ -1,0 +1,20 @@
+<?php
+
+// Code based on http://wordpress.damien.co/2011/07/how-to-enable-wordpress-maintenance-mode/
+
+function is_user_logged_in()
+{
+	$loggedin = FALSE;
+	foreach ( (array) $_COOKIE as $cookie => $value )
+	{
+		if ( stristr($cookie, ‘wordpress_logged_in_’) ) $loggedin = TRUE;
+	}
+	return $loggedin;
+}
+	
+if ( !stristr($_SERVER['REQUEST_URI'], '/wp-admin') && !stristr($_SERVER['REQUEST_URI'], '/wp-login.php') && !is_user_logged_in() )
+{
+	$upgrading = time();
+}
+
+?>
