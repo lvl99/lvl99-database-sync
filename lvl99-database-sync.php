@@ -273,7 +273,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			$this->default_options = array(
 				'path' => array(
 					'sanitise_callback' => NULL,
-					'default' => trailingslashit(WP_CONTENT_DIR) . 'backup-db/',
+					'default' => '{WP_CONTENT_DIR}/backup-db/',
 					'field_type' => 'text',
 					'label' => _x('SQL file folder path', 'field label: path', 'lvl99-dbs'),
 					'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>Consider referencing to a folder that exists outside your www/public_html folder</p>
