@@ -30,6 +30,16 @@ License: GPL2
 
 if ( !defined('ABSPATH') ) exit( 'No direct access allowed' );
 
+// Fallback function if PHP not compiled with ZLIB
+// http://stackoverflow.com/a/10381158/1421162
+if ( !function_exists('gzdecode') )
+{
+	function gzdecode( $data )
+	{
+		return gzinflate( substr( $data, 10, -8 ) ); 
+	}
+}
+
 if ( !class_exists( 'LVL99_DBS' ) )
 {
 	/*
@@ -91,6 +101,15 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public $notices = array();
 		
 		/*
+		@property $start
+		@private
+		@since 0.0.2
+		@description The time the plugin started operating
+		@type {int}
+		*/
+		private $start;
+		
+		/*
 		@method __construct
 		@since 0.0.1
 		@description PHP magic method which runs when class is created
@@ -99,6 +118,9 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function __construct()
 		{
 			$this->plugin_dir = dirname(__FILE__);
+			
+			// Record the time taken
+			$this->start = microtime( TRUE );
 
 			// Actions/filters
 			register_activation_hook( __FILE__, array( &$this, 'activate' ) );
@@ -122,8 +144,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			if ( !is_admin() )
 			{
 				$callee = debug_backtrace();
-				error_log( _x( sprintf('LVL99_DBS: Non-admin attempted operation %s', $callee[1]['function']), 'lvl99-dbs'), 'wp error_log' );
-				exit( __('Error: You must have administrator privileges to operate this functionality', 'lvl99-dbs') );
+				error_log( _x( sprintf('LVL99_DBS Error: Non-admin attempted operation %s', $callee[1]['function']), 'lvl99-dbs'), 'wp error_log' );
+				wp_die( __('LVL99 DBS Error: You must have administrator privileges to operate this functionality', 'lvl99-dbs') );
 			}
 			return TRUE;
 		}
@@ -342,6 +364,28 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		}
 		
 		/*
+		@method sanitise_sql
+		@since 0.0.2
+		@description Sanitises SQL, primarily by looking for specific SQL commands
+		@param {String} $input The string to sanitise
+		@returns {String}
+		*/
+		public function sanitise_sql( $input )
+		{
+			$search = array(
+				'/(CREATE|DROP|UPDATE|ALTER|RENAME|TRUNCATE)\s+(TABLE|TABLESPACE|DATABASE|VIEW|LOGFILE|EVENT|FUNCTION|PROCEDURE|TRIGGER)[^\;]+/',
+				'/\d\s*=\s*\d/',
+			);
+			$replace = array(
+				'',
+				'',
+			);
+			
+			$output = preg_replace( $search, $replace, $input );
+			return $output;
+		}
+		
+		/*
 		@method get_option
 		@since 0.0.1
 		@description Gets an option
@@ -498,7 +542,6 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			// Check the directory path for SQL files exists
 			if ( !file_exists($path) && !is_dir($path) )
 			{
-				exit( $path );
 				$this->admin_error( sprintf( __('Error: Invalid path set', 'lvl99-dbs'), $path ) );
 				return $files;
 			}
@@ -695,9 +738,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@method load_sql_file
 		@since 0.0.1
 		@description Loads an SQL file to update the database with
+		@param {String} $file The file name of the file located at the path to load
+		@param {Mixed} $postprocessing {Boolean} false if no post-processing, {Array} with 'search' and 'replace' arrays
 		@returns {Boolean}
 		*/
-		public function load_sql_file( $file = FALSE )
+		public function load_sql_file( $file = FALSE, $postprocessing = FALSE )
 		{
 			global $wpdb;
 			
@@ -705,7 +750,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			
 			if ( !$file )
 			{
-				$this->admin_error( 'No file was selected' );
+				$this->admin_error( _x('No file was selected', 'No file specified for load_sql_file operation', 'lvl99-dbs') );
 				return FALSE;
 			}
 
@@ -735,6 +780,22 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$lines = explode( "\n", $lines );
 			}
 			
+			// Post-processing
+			if ( is_array($postprocessing) && array_key_exists( 'search', $postprocessing ) && array_key_exists( 'replace', $postprocessing ) )
+			{
+				$lines = implode( "\n", $lines );
+				
+				// @TODO may need to chunk lines to avoid any lengthy timeouts, depending on how big the SQL file is
+				/*
+				echo '<pre>';
+				var_dump( $postprocessing );
+				echo '</pre>';
+				exit();
+				*/
+				$lines = preg_replace( $postprocessing['search'], $postprocessing['replace'], $lines );
+				$lines = explode( "\n", $lines );
+			}
+			
 			// Loop through each line
 			foreach ($lines as $line)
 			{
@@ -748,20 +809,31 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				if ( substr(trim($line), -1, 1) == ';' )
 				{
 					// Perform the query
-					$wpdb->query( $templine );
-					
-					// Reset temp variable to empty
-					$templine = '';
+					// -- Error
+					if ( $wpdb->query( $templine ) === FALSE )
+					{
+						wp_die( sprintf( __('LVL99 DBS Error: Something when wrong when processing the SQL file (%s)', 'lvl99-dbs'), $wpdb->last_error ) );
+					}
+					else // -- Success
+					{
+						// Reset temp variable to empty
+						$templine = '';
+					}
 				}
 			}
 			
+			// Get time taken
+			$end = microtime( TRUE );
+			$time = round($end-$this->start, 2) . ' ' . __('seconds', 'Load SQL process time taken unit seconds', 'lvl99-dbs');
+			
+			// Success message
 			if ( defined('WP_CACHE') )
 			{
-				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong>. If you have a caching plugin, it is recommended you flush your database cache now.', 'lvl99-dbs'), $file_name ) );
+				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s). If you have a caching plugin, it is recommended you flush your database cache now.', 'lvl99-dbs'), $file_name, $time ) );
 			}
 			else
 			{
-				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong>', 'lvl99-dbs'), $file_name ) );
+				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s)', 'lvl99-dbs'), $file_name, $time ) );
 			}
 			
 			// Disable maintenance
@@ -954,10 +1026,53 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				return;
 			}
 			
+			// Detect if any post-processing is needed and prepare the object
+			$postprocessing = FALSE;
+			if (  isset($this->route['request']['post']['postprocessing_search'])  &&
+				 !empty($this->route['request']['post']['postprocessing_search'])  &&
+				  isset($this->route['request']['post']['postprocessing_replace']) &&
+				 !empty($this->route['request']['post']['postprocessing_replace']) )
+			{
+				$_postprocessing = array(
+					'search' => $this->route['request']['post']['postprocessing_search'],
+					'replace' => $this->route['request']['post']['postprocessing_replace'],
+				);
+				
+				// Format the post-processing object
+				$postprocessing = array();
+				// -- Process each processing type
+				foreach( $_postprocessing as $type => $values )
+				{
+					// Turn into arrays if not already an array
+					if ( is_string($values) )
+					{
+						if ( preg_match( '/[\r\n]+/', $values ) != FALSE )
+						{
+							$values = preg_split( '/[\r\n]+/', $values );
+						}
+						else
+						{
+							$values = array( $values );
+						}
+					}
+					$_postprocessing[$type] = $values;
+					
+					// Process each processing value
+					foreach( $values as $key => $value )
+					{
+						$value = $this->sanitise_sql( $value );
+						if ( !preg_match( '/^\//', $value ) ) $value = '/' . $value;
+						if ( !preg_match( '/\/[a-z]*$/', $value ) ) $value = $value . '/';
+						$_postprocessing[$type][$key] = $value;
+					}
+				}
+				$postprocessing = $_postprocessing;
+			}
+			
 			// Use an existing file hosted on the server
 			if ( isset($this->route['request']['post']['file']) && !empty($this->route['request']['post']['file']) )
 			{
-				$this->load_sql_file( $this->route['request']['post']['file'] );
+				$this->load_sql_file( $this->route['request']['post']['file'], $postprocessing );
 			}
 			
 			// Use an uploaded file
@@ -985,7 +1100,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				if ( move_uploaded_file( $upload_path ) )
 				{
 					admin_notice( sprintf( __('<strong><code>%s</code></strong> was successfully uploaded.', 'lvl99-dbs'), $uploaded_file ) );
-					$this->load_sql_file( $uploaded_file );
+					$this->load_sql_file( $uploaded_file, $postprocessing );
 				}
 				else
 				{

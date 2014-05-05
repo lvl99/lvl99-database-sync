@@ -71,15 +71,41 @@ global $lvl99_dbs;
 							</table>
 						</td>
 					</tr>
-					<tr>
-						<th scope="row">&nbsp;</th>
-						<td><input type="submit" name="lvl99_dbs_submit" value="<?php _ex('Load selected SQL file', 'Load SQL page button submit label action=load', 'lvl99-dbs'); ?>" class="button button-primary" /></td>
-					</tr>
 					<?php endif; ?>
 					<tr>
 						<th scope="row"><?php _ex('Upload SQL file', 'field label: fileupload', 'lvl99-dbs'); ?></th>
-						<td><input type="file" name="lvl99_dbs_fileupload" value="" /><br/>
-						<input type="submit" name="lvl99_dbs_submit" value="<?php _ex('Upload SQL file', 'Load SQL page button submit label action=upload', 'lvl99-dbs'); ?>" class="button button-primary" /></td>
+						<td><input type="file" name="lvl99_dbs_fileupload" value="" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php _ex('Post-processing', 'field label: postprocessing', 'lvl99-dbs'); ?></th>
+						<td>
+							<div class="lvl99-dbs-option-help">
+							<?php _ex( '<p>Post-processing allows you to search for and replace string values within the SQL document before it is loaded. For example, you may use it to replace URL strings that contain the dev/staging site\'s URL with the live/production site\'s URL.</p>
+<p>Separate the search and replace values with a new line. Regular expressions are supported (search/replace is performed by <code>preg_replace</code>)</p>', 'field help: postprocessing', 'lvl99-dbs' ); ?>
+							</div>
+							<table style="width: 100%">
+								<tr>
+									<td style="width: 50%">
+										<label>
+											<h4>Search</h4>
+											<textarea name="lvl99_dbs_postprocessing_search" style="width: 100%; height: 8em"></textarea>
+										</label>
+									</td>
+									<td style="width: 50%">
+										<label>
+											<h4>Replace</h4>
+											<textarea name="lvl99_dbs_postprocessing_replace" style="width: 100%; height: 8em"></textarea>
+										</label>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">&nbsp;</th>
+						<td>
+							<input type="submit" name="lvl99_dbs_submit" value="<?php _ex('Load and process SQL file', 'Load SQL page button submit label', 'lvl99-dbs'); ?>" class="button button-primary" />
+						</td>
 					</tr>
 				</tbody>
 			</table>
