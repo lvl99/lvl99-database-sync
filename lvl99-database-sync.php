@@ -6,7 +6,7 @@ Plugin URI: http://www.lvl99.com/code/database-sync/
 Description: Allows you to easily save your WP database to an SQL file, and to also restore a database from an SQL file.
 Author: Matt Scheurich
 Author URI: http://www.lvl99.com/
-Version: 0.0.2
+Version: 0.1.0-alpha
 Text Domain: lvl99-dbs
 License: GPL2
 */
@@ -54,7 +54,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@description The version number of the plugin
 		@type {String}
 		*/
-		const VERSION = '0.0.2';
+		const VERSION = '0.1.0-alpha';
 		
 		/*
 		@property $plugin_dir
@@ -207,8 +207,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					case FALSE:
 						break;
 						
-					case '0.0.1':
-						break;
+					// case '0.0.1':
+					//	break;
 				}
 			}
 		}
@@ -236,8 +236,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				case FALSE:
 					break;
 				
-				case '0.0.1':
-					break;
+				// case '0.0.1':
+				//	break;
 			}
 		}
 		
