@@ -45,7 +45,7 @@ global $lvl99_dbs;
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php $lvl99_dbs->default_options['compress_format']['label']; ?></th>
+						<th scope="row"><?php _ex( 'File compression format', 'Save SQL page field label: compress_format', 'lvl99-dbs' ); ?></th>
 						<td>
 							<ul>
 								<?php foreach( $lvl99_dbs->default_options['compress_format']['values'] as $option ) : ?>

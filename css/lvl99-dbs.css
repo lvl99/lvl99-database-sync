@@ -5,13 +5,23 @@
 }
 .widefat th.lvl99-dbs-filelist-col-file,
 .widefat td.lvl99-dbs-filelist-col-file {
-  width: 55%;
+  width: 45%;
   text-align: left;
+}
+.widefat th.lvl99-dbs-filelist-col-size,
+.widefat td.lvl99-dbs-filelist-col-size {
+  width: 15%;
+  text-align: center;
+}
+.widefat th.lvl99-dbs-filelist-col-created,
+.widefat td.lvl99-dbs-filelist-col-created {
+  width: 15%;
+  text-align: center;
 }
 .widefat th.lvl99-dbs-filelist-col-controls,
 .widefat td.lvl99-dbs-filelist-col-controls {
-  width: 30%;
-  text-align: left;
+  width: 20%;
+  text-align: center;
 }
 .lvl99-dbs-page {
   padding: 1em 3em 3em;

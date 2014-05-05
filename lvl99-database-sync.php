@@ -6,7 +6,7 @@ Plugin URI: http://www.lvl99.com/code/database-sync/
 Description: Allows you to easily save your WP database to an SQL file, and to also restore a database from an SQL file.
 Author: Matt Scheurich
 Author URI: http://www.lvl99.com/
-Version: 0.0.1
+Version: 0.0.2
 Text Domain: lvl99-dbs
 License: GPL2
 */
@@ -44,7 +44,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@description The version number of the plugin
 		@type {String}
 		*/
-		const VERSION = '0.0.1';
+		const VERSION = '0.0.2';
 		
 		/*
 		@property $plugin_dir
@@ -254,7 +254,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					'default' => trailingslashit(WP_CONTENT_DIR) . 'backup-db/',
 					'field_type' => 'text',
 					'label' => _x('SQL file folder path', 'field label: path', 'lvl99-dbs'),
-					'help' => '<p>'._x('The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>Consider referencing to a folder that exists outside your www/public_html folder', 'field help: path', 'lvl99-dbs' ).'</p>',
+					'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>Consider referencing to a folder that exists outside your www/public_html folder</p>
+<p>Tags you can use within the path:</p>', 'field help: file_name', 'lvl99-dbs').'
+<ul><li><code>{ABSPATH}</code> ' . _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)', 'field help: path {ABSPATH} tag', 'lvl99-dbs') . '</li>
+<li><code>{WP_CONTENT_DIR}</code> ' . _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs') . '</li></ul>',
 				),
 				'file_name' => array(
 					'sanitise_callback' => array( &$this, 'sanitise_option_file_name' ),
@@ -350,6 +353,21 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			if ( !$name || !array_key_exists($name, $this->options) ) return $default;
 			return isset($this->options[$name]) ? $this->options[$name] : $default;
+		}
+		
+		/*
+		@method get_option_path
+		@since 0.0.2
+		@description Filters the tags in the path option
+		@returns {String}
+		*/
+		public function get_option_path()
+		{
+			$path = $this->replace_tags( $this->get_option('path'), array(
+				'ABSPATH' => ABSPATH,
+				'WP_CONTENT_DIR' => WP_CONTENT_DIR,
+			) );
+			return $path;
 		}
 		
 		/*
@@ -475,19 +493,83 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			$this->check_admin();
 			
 			$files = array();
-			$path = $this->get_option('path');
+			$path = $this->get_option_path();
 			
 			// Check the directory path for SQL files exists
-			if ( !file_exists($path) && !is_dir($path) ) exit( __('Error: Invalid path set', 'lvl99-dbs') );
+			if ( !file_exists($path) && !is_dir($path) )
+			{
+				exit( $path );
+				$this->admin_error( sprintf( __('Error: Invalid path set', 'lvl99-dbs'), $path ) );
+				return $files;
+			}
 			
 			// Get the list of files within the directory
 			$dir_files = scandir( $path );
 			foreach( $dir_files as $file )
 			{
-				if ( strstr($file, '.sql') != FALSE ) array_push( $files, $file );
+				if ( preg_match( '/\.sql(\.gz(ip)?)?$/i', $file ) != FALSE )
+				{
+					array_push( $files, array(
+						'file_name' => $file,
+						'size' => filesize( $path . $file ),
+						'created' => filectime( $path . $file ),
+						'modified' => filemtime( $path . $file ),
+					) );
+				}
 			}
 			
 			return $files;
+		}
+		
+		/*
+		@method replace_tags
+		@since 0.0.2
+		@description Replaces {tags} with property in object/array
+		@param {String} $input The string to detect and replace tags within
+		@param {Mixed} $tags The object/array that holds the values to replace {tags} within string
+		@returns {String}
+		*/
+		public function replace_tags( $input, $tags = array() )
+		{
+			$output = $input;
+			preg_match_all( '/\{[a-z0-9\:\_\-\/\\\]+\}/i', $input, $matches );
+			
+			if ( count($matches[0]) )
+			{
+				foreach( $matches[0] as $tag )
+				{
+					$tag_search = $tag;
+					$tag_name = preg_replace( '/[\{\}]/', '', $tag );
+					$tag_replace = '';
+					
+					// Get string to replace tag with
+					if ( array_key_exists( $tag_name, $tags ) != FALSE )
+					{
+						$tag_replace = $tags[$tag_name];
+					}
+					
+					// Tag has arguments
+					if ( strstr($tag_name, ':') != FALSE )
+					{
+						$tag_split = explode( ':', $tag_name );
+						$tag_name = $tag_split[0];
+						$tag_replace = $tag_split[1];
+						
+						// Supported special functions (defined by {function:argument})
+						switch ($tag_name)
+						{
+							case 'date':
+								$tag_replace = date( $tag_replace );
+								break;
+						}
+					}
+					
+					// Replace
+					$output = str_replace( $tag_search, $tag_replace, $output );
+				}
+			}
+			
+			return $output;
 		}
 		
 		/*
@@ -500,47 +582,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			$file_name = $this->get_option('file_name');
 			$output_file_name = $file_name;
-			preg_match_all( '/\{[a-z0-9\:\_\-\/\\\]+\}/i', $file_name, $matches );
-			
-			if ( count($matches[0]) )
-			{
-				foreach( $matches[0] as $tag )
-				{
-					$tag_search = $tag;
-					$tag_name = preg_replace( '/[\{\}]/', '', $tag );
-					$tag_replace = '';
-					
-					// Tag has arguments
-					if ( strstr($tag_name, ':') != FALSE )
-					{
-						$tag_split = explode( ':', $tag_name );
-						$tag_name = $tag_split[0];
-						$tag_replace = $tag_split[1];
-					}
-					
-					// Get the value to replace the tag with
-					switch ($tag_name)
-					{
-						case 'url':
-							$tag_replace = untrailingslashit( preg_replace('/[a-z]+\:\/\//', '', WP_HOME ) );
-							break;
-							
-						case 'date':
-							$tag_replace = date( $tag_replace );
-							break;
-						
-						case 'env':
-							if ( defined('WP_ENV') ) $tag_replace = WP_ENV;
-							break;
-						
-						case 'database':
-							$tag_replace = DB_NAME;
-							break;
-					}
-					
-					$output_file_name = str_replace( $tag_search, $tag_replace, $output_file_name );
-				}
-			}
+			$output_file_name = $this->replace_tags( $output_file_name, array(
+				'url' => untrailingslashit( preg_replace('/[a-z]+\:\/\//', '', WP_HOME ) ),
+				'env' => defined('WP_ENV') ? WP_ENV : '',
+				'database' => DB_NAME,
+			) );
 			
 			if ( !preg_match('/\.sql$/i', $output_file_name ) ) $output_file_name .= '.sql';
 			return $output_file_name;
@@ -562,7 +608,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			
 			// Set the file's name and save path
 			$file_name = $this->build_file_name();
-			$file = $this->get_option('path') . $file_name;
+			$file = $this->get_option_path() . $file_name;
 			
 			//get all of the tables
 			if ( $tables == '*' )
@@ -666,7 +712,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 
 			// Make sure file exists in the path
 			$file_name = basename($file);
-			$file = $this->get_option('path') . $file;
+			$file = $this->get_option_path() . $file;
 			if ( !file_exists($file) )
 			{
 				$this->admin_error( sprintf( __('File does not exist at <strong><code>%s</code></strong>', 'lvl99-dbs'), $file ) );
@@ -742,7 +788,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			
 			// Make sure file exists in the path
 			$file_name = basename($file);
-			$file = $this->get_option('path') . $file_name;
+			$file = $this->get_option_path() . $file_name;
 			if ( !file_exists($file) )
 			{
 				$this->admin_error( sprintf( __('<strong><code>%s</code></strong> does not exist on the server.', 'lvl99-dbs'), $file_name ) );
@@ -776,7 +822,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			
 			// Make sure file exists in the path
 			$file_name = basename($file);
-			$file = $this->get_option('path') . $file;
+			$file = $this->get_option_path() . $file;
 			if ( !file_exists( $file) )
 			{
 				$this->admin_error( sprintf( __('File does not exist at <strong><code>%s</code></strong>', 'lvl99-dbs'), $file ) );
@@ -917,14 +963,14 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			if ( isset($this->route['request']['post']['fileupload']) && !empty($this->route['request']['post']['fileupload']) )
 			{
 				$uploaded_file = $this->route['request']['post']['fileupload']['name'];
-				$upload_path = $this->get_option('path') . $uploaded_file;
+				$upload_path = $this->get_option_path() . $uploaded_file;
 				
 				// Checks
 				// -- Duplicate name
 				if ( file_exists($upload_path) )
 				{
 					$uploaded_file = preg_replace( '/(\.sql(\.gz)?)$/', md5(time()) . '$1', $uploaded_file );
-					$upload_path = $this->get_option('path') . $uploaded_file;
+					$upload_path = $this->get_option_path() . $uploaded_file;
 				}
 				
 				// -- PHP file
@@ -1062,6 +1108,20 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			$this->check_admin();
 			include( trailingslashit($this->plugin_dir) . 'views/admin-options.php' );
+		}
+		
+		/*
+		@method format_file_size
+		@since 0.0.2
+		@description Formats a file size (given in byte value) with KB/MB signifier
+		@returns {String}
+		*/
+		public function format_file_size( $input, $decimals = 2 )
+		{
+			$input = intval( $input );
+			if ( $input < 1000000 ) return round( $input/1000 ) . 'KB';
+			if ( $input < 1000000000 ) return round( ($input/1000)/1000, $decimals ) . 'MB';
+			return $input;
 		}
 	}
 }
