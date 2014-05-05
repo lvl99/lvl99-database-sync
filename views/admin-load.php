@@ -43,7 +43,7 @@ global $lvl99_dbs;
 									<tr class="lvl99-dbs-filelist-file">
 										<?php $file_id = md5($file['file_name']); ?>
 										<td class="lvl99-dbs-filelist-col-radio">
-											<input id="<?php echo $file_id; ?>" type="radio" name="lvl99_dbs_file" value="<?php echo esc_attr($file); ?>" />
+											<input id="<?php echo $file_id; ?>" type="radio" name="lvl99_dbs_file" value="<?php echo esc_attr($file['file_name']); ?>" />
 										</td>
 										<td class="lvl99-dbs-filelist-col-file">
 											<label for="<?php echo $file_id; ?>"><?php echo $file['file_name']; ?></label>

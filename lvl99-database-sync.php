@@ -581,8 +581,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function build_file_name()
 		{
 			$file_name = $this->get_option('file_name');
-			$output_file_name = $file_name;
-			$output_file_name = $this->replace_tags( $output_file_name, array(
+			$output_file_name = $this->replace_tags( $file_name, array(
 				'url' => untrailingslashit( preg_replace('/[a-z]+\:\/\//', '', WP_HOME ) ),
 				'env' => defined('WP_ENV') ? WP_ENV : '',
 				'database' => DB_NAME,
@@ -713,6 +712,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			// Make sure file exists in the path
 			$file_name = basename($file);
 			$file = $this->get_option_path() . $file;
+			
 			if ( !file_exists($file) )
 			{
 				$this->admin_error( sprintf( __('File does not exist at <strong><code>%s</code></strong>', 'lvl99-dbs'), $file ) );
@@ -859,6 +859,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					'get' => $_GET,
 					'post' => $_POST,
 				);
+				
 				$request = array();
 				foreach ( $_request as $_method => $_array )
 				{
