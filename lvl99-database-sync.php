@@ -6,7 +6,7 @@ Plugin URI: http://www.lvl99.com/code/database-sync/
 Description: Allows you to easily save your WP database to an SQL file, and to also restore a database from an SQL file.
 Author: Matt Scheurich
 Author URI: http://www.lvl99.com/
-Version: 0.1.0-alpha
+Version: 0.1.1-alpha
 Text Domain: lvl99-dbs
 License: GPL2
 */
@@ -36,7 +36,7 @@ if ( !function_exists('gzdecode') )
 {
 	function gzdecode( $data )
 	{
-		return gzinflate( substr( $data, 10, -8 ) ); 
+		return gzinflate( substr( $data, 10, -8 ) );
 	}
 }
 
@@ -54,7 +54,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@description The version number of the plugin
 		@type {String}
 		*/
-		const VERSION = '0.1.0-alpha';
+		const VERSION = '0.1.1-alpha';
 		
 		/*
 		@property $plugin_dir
@@ -101,13 +101,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public $notices = array();
 		
 		/*
-		@property $start
+		@property $stats
 		@private
-		@since 0.0.2
-		@description The time the plugin started operating
-		@type {int}
+		@since 0.1.1-alpha
+		@description Array for tracking various statistics
+		@type {Array}
 		*/
-		private $start;
+		private $stats = array();
 		
 		/*
 		@method __construct
@@ -119,8 +119,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			$this->plugin_dir = dirname(__FILE__);
 			
-			// Record the time taken
-			$this->start = microtime( TRUE );
+			// Initialise stats array
+			$this->stats = array(
+				'start_time' => microtime( TRUE ),
+				'end_time' => 0,
+				'total_time' => 0,
+				'num_queries' => 0,
+			);
 
 			// Actions/filters
 			register_activation_hook( __FILE__, array( &$this, 'activate' ) );
@@ -159,6 +164,21 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function i18n()
 		{
 			load_plugin_textdomain( 'lvl99-dbs', FALSE, basename( dirname(__FILE__) ) . '/languages' );
+		}
+		
+		/*
+		@method calc_total_time
+		@since 0.1.1-alpha
+		@description Calculates the total time taken
+		@returns {String}
+		*/
+		public function calc_total_time()
+		{
+			// Get time taken
+			$this->stats['end_time'] = microtime( TRUE );
+			$this->stats['total_time'] = round($this->stats['end_time']-$this->stats['start_time'], 2) . ' ' . __('seconds', 'Load SQL process time taken unit seconds', 'lvl99-dbs');
+			
+			return $this->stats['total_time'];
 		}
 		
 		/*
@@ -669,21 +689,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			}
 			
 			// Create the return object
-			$return = '
-/*
-  WP Database Backup
-  Created with LVL99 Database Sync v'.self::VERSION.'
-
-  Site: '.get_bloginfo('name').'
-  Address: '.WP_HOME.'
-
-  File: '.$file_name.'
-  Created: '.date( 'Y-m-d h:i:s' ).'
-  Tables:
-    -- '.implode("\n    -- ", $tables).'
-*/
-
-';
+			$return = '';
 			
 			// Cycle through
 			foreach( $tables as $table )
@@ -692,8 +698,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$num_fields = sizeof( $wpdb->get_results( 'DESCRIBE ' . $table, ARRAY_N ) );
 				
 				$return .= 'DROP TABLE '.$table.';';
+				$this->stats['num_queries'] += 1;
+				
 				$row2 = $wpdb->get_results( 'SHOW CREATE TABLE ' . $table, ARRAY_N );
 				$return .= "\n\n".$row2[0][1].";\n\n";
+				$this->stats['num_queries'] += 1;
 				
 				foreach ( $result as $i => $row ) 
 				{
@@ -704,18 +713,37 @@ if ( !class_exists( 'LVL99_DBS' ) )
 						$row[$j] = str_replace( "\n", "\\n", $row[$j] );
 						if ( isset($row[$j]) )
 						{
-							$return .= '"'.$row[$j].'"' ;
+							$return .= '\''.$row[$j].'\'' ;
 						}
 						else
 						{
-							$return .= '""';
+							$return .= '\'';
 						}
 						if ( $j<($num_fields-1) ) $return .= ',';
 					}
 					$return .= ");\n";
+					$this->stats['num_queries'] += 1;
 				}
 				$return .= "\n\n\n";
 			}
+			
+			// Add meta data to SQL file
+			$return = '
+/*
+--  WP Database Backup
+--  Created with LVL99 Database Sync v'.self::VERSION.'
+--
+--   Site: '.get_bloginfo('name').'
+--   Address: '.WP_HOME.'
+--
+--  File: '.$file_name.'
+--  Created: '.date( 'Y-m-d h:i:s' ).'
+--  Number of Queries: '.$this->stats['num_queries'].'
+--  Tables:
+--    -  '.implode("\n    -  ", $tables).'
+*/
+
+' . $return;
 		
 			// Compression
 			if ( $compression == 'gzip' )
@@ -730,7 +758,9 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			fwrite( $handle, $return );
 			fclose( $handle );
 			
-			$this->admin_notice( sprintf( __('Database was successfully backed up to <strong><code>%s</code></strong>', 'lvl99-dbs'), $file_name ) );
+			$this->calc_total_time();
+			$this->admin_notice( sprintf( __('Database was successfully backed up to <strong><code>%s</code></strong><br/>
+Time taken: %s; Number of queries: %s', 'lvl99-dbs'), $file_name, $this->stats['total_time'], $this->stats['num_queries'] ) );
 			return TRUE;
 		}
 		
@@ -776,7 +806,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			// Uncompress
 			if ( preg_match( '/\.gz(ip)?$/i', $file ) != FALSE )
 			{
-				$lines = gzdecode( implode('', $lines) );
+				$lines = implode( "", $lines );
+				$lines = gzdecode( $lines );
 				$lines = explode( "\n", $lines );
 			}
 			
@@ -792,8 +823,15 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				echo '</pre>';
 				exit();
 				*/
-				$lines = preg_replace( $postprocessing['search'], $postprocessing['replace'], $lines );
-				$lines = explode( "\n", $lines );
+				if ( $lines = preg_replace( $postprocessing['search'], $postprocessing['replace'], $lines ) )
+				{
+					$lines = explode( "\n", $lines );
+				}
+				else
+				{
+					wp_die( sprintf( _x( 'LVL99 DBS Error: An incorrect regular expression was given for post-processing<br/>
+<pre>%s</pre>', 'lvl99-dbs'), implode("\n", $postprocessing['search']) ) );
+				}
 			}
 			
 			// Loop through each line
@@ -812,28 +850,33 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					// -- Error
 					if ( $wpdb->query( $templine ) === FALSE )
 					{
-						wp_die( sprintf( __('LVL99 DBS Error: Something when wrong when processing the SQL file (%s)', 'lvl99-dbs'), $wpdb->last_error ) );
+						wp_die( sprintf( __('LVL99 DBS Error: Something when wrong when processing the SQL file (stopped at query #%s)<br/>
+<pre>%s</pre>', 'lvl99-dbs'), $this->stats['num_queries'], $wpdb->last_error ) );
 					}
 					else // -- Success
 					{
+						// Update stats
+						$this->stats['num_queries'] += 1;
+						
 						// Reset temp variable to empty
 						$templine = '';
 					}
 				}
 			}
 			
-			// Get time taken
-			$end = microtime( TRUE );
-			$time = round($end-$this->start, 2) . ' ' . __('seconds', 'Load SQL process time taken unit seconds', 'lvl99-dbs');
+			$this->calc_total_time();
 			
 			// Success message
 			if ( defined('WP_CACHE') )
 			{
-				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s). If you have a caching plugin, it is recommended you flush your database cache now.', 'lvl99-dbs'), $file_name, $time ) );
+				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong><br/>
+Time taken: %s; Number of queries performed: %s<br/>
+If you have a caching plugin, it is recommended you flush your database cache now.', 'lvl99-dbs'), $file_name, $this->stats['total_time'], $this->stats['num_queries'] ) );
 			}
 			else
 			{
-				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s)', 'lvl99-dbs'), $file_name, $time ) );
+				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong><br/>
+Time taken: %s; Number of queries performed: %s', 'lvl99-dbs'), $file_name, $this->stats['total_time'], $this->stats['num_queries'] ) );
 			}
 			
 			// Disable maintenance
@@ -1061,8 +1104,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					foreach( $values as $key => $value )
 					{
 						$value = $this->sanitise_sql( $value );
-						if ( !preg_match( '/^\//', $value ) ) $value = '/' . $value;
-						if ( !preg_match( '/\/[a-z]*$/', $value ) ) $value = $value . '/';
+						if ( $type == 'search' )
+						{
+							if ( !preg_match( '/^\//', $value ) ) $value = '/' . preg_quote( $value, '/' );
+							if ( !preg_match( '/\\{0}\/[a-z]*$/i', $value ) ) $value = $value . '/';
+						}
 						$_postprocessing[$type][$key] = $value;
 					}
 				}
