@@ -15,7 +15,7 @@ License: GPL2
 	Copyright (c) 2014 Matt Scheurich (email: matt@lvl99.com)
 
 	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License, version 2, as 
+	it under the terms of the GNU General Public License, version 2, as
 	published by the Free Software Foundation.
 
 	This program is distributed in the hope that it will be useful,
@@ -36,7 +36,7 @@ if ( !function_exists('gzdecode') )
 {
 	function gzdecode( $data )
 	{
-		return gzinflate( substr( $data, 10, -8 ) ); 
+		return gzinflate( substr( $data, 10, -8 ) );
 	}
 }
 
@@ -55,7 +55,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@type {String}
 		*/
 		const VERSION = '0.0.2';
-		
+
 		/*
 		@property $plugin_dir
 		@since 0.0.1
@@ -64,7 +64,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@type {String}
 		*/
 		private $plugin_dir;
-		
+
 		/*
 		@property $default_options
 		@since 0.0.1
@@ -73,7 +73,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@type {Array}
 		*/
 		protected $default_options = array();
-		
+
 		/*
 		@property $options
 		@since 0.0.1
@@ -82,7 +82,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@type {Array}
 		*/
 		protected $options = array();
-		
+
 		/*
 		@property $route
 		@since 0.0.1
@@ -91,7 +91,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@type {Array}
 		*/
 		protected $route = array();
-		
+
 		/*
 		@property $notices
 		@since 0.0.1
@@ -99,7 +99,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@type {Array}
 		*/
 		public $notices = array();
-		
+
 		/*
 		@property $start
 		@private
@@ -108,7 +108,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		@type {int}
 		*/
 		private $start;
-		
+
 		/*
 		@method __construct
 		@since 0.0.1
@@ -118,7 +118,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function __construct()
 		{
 			$this->plugin_dir = dirname(__FILE__);
-			
+
 			// Record the time taken
 			$this->start = microtime( TRUE );
 
@@ -131,7 +131,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			add_action( 'admin_notices', array( &$this, 'admin_notices' ) );
 			add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), array( &$this, 'admin_plugin_links' ) );
 		}
-		
+
 		/*
 		@method check_admin
 		@since 0.0.1
@@ -149,7 +149,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			}
 			return TRUE;
 		}
-		
+
 		/*
 		@method i18n
 		@since 0.0.1
@@ -160,7 +160,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			load_plugin_textdomain( 'lvl99-dbs', FALSE, basename( dirname(__FILE__) ) . '/languages' );
 		}
-		
+
 		/*
 		@method activate
 		@since 0.0.1
@@ -180,12 +180,12 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					add_option( 'lvl99-dbs/' . $name, $value );
 				}
 			}
-			
+
 			// Mark that the plugin is now installed
 			update_option( '_lvl99-dbs/installed', TRUE );
 			update_option( '_lvl99-dbs/version', self::VERSION );
 		}
-		
+
 		/*
 		@method deactivate
 		@since 0.0.1
@@ -196,23 +196,23 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			$_plugin_installed = get_option( '_lvl99-dbs/installed', TRUE );
 			$_plugin_version = get_option( '_lvl99-dbs/version', self::VERSION );
-			
+
 			if ( $_plugin_installed )
 			{
 				switch ($_plugin_version)
 				{
 					default:
 						break;
-					
+
 					case FALSE:
 						break;
-						
+
 					case '0.0.1':
 						break;
 				}
 			}
 		}
-		
+
 		/*
 		@method uninstall
 		@since 0.0.1
@@ -222,7 +222,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function uninstall( $_plugin_version = FALSE )
 		{
 			if ( !$_plugin_version ) $_plugin_version = get_option( '_lvl99-dbs/version', self::VERSION );
-			
+
 			switch ($_plugin_version)
 			{
 				default:
@@ -232,15 +232,15 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					}
 					delete_option( '_lvl99-dbs/installed' );
 					delete_option( '_lvl99-dbs/version' );
-				
+
 				case FALSE:
 					break;
-				
+
 				case '0.0.1':
 					break;
 			}
 		}
-		
+
 		/*
 		@method initialise
 		@since 0.0.1
@@ -250,17 +250,17 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function initialise()
 		{
 			$this->check_admin();
-			
+
 			// Load in the options (via DB or use defined defaults above)
 			$this->load_options();
-			
+
 			// Detect (and run) the route
 			$this->detect_route();
-			
+
 			// Plugin scripts and styles
 			wp_enqueue_style( 'lvl99-dbs', plugins_url( 'css/lvl99-dbs.css', __FILE__ ), FALSE, self::VERSION, 'all' );
 		}
-		
+
 		/*
 		@method load_options
 		@since 0.0.1
@@ -271,6 +271,9 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			// Default options
 			$this->default_options = array(
+				/*
+				 * Path to save/load SQL files to
+				 */
 				'path' => array(
 					'sanitise_callback' => NULL,
 					'default' => trailingslashit(WP_CONTENT_DIR) . 'backup-db/',
@@ -278,9 +281,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					'label' => _x('SQL file folder path', 'field label: path', 'lvl99-dbs'),
 					'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>Consider referencing to a folder that exists outside your www/public_html folder</p>
 <p>Tags you can use within the path:</p>', 'field help: file_name', 'lvl99-dbs').'
-<ul><li><code>{ABSPATH}</code> ' . _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)', 'field help: path {ABSPATH} tag', 'lvl99-dbs') . '</li>
+<ul><li><code>{ABSPATH}</code> ' . _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)', 'field help: path {ABSPATH} tag', 'lvl99-dbs') . '</li><li><code>{get_home_path}</code> ' . _x('The path to the WordPress\'s installation (references function <code>get_home_path()</code>\'s return value)', 'field help: path {get_home_path} tag', 'lvl99-dbs') . '</li>
 <li><code>{WP_CONTENT_DIR}</code> ' . _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs') . '</li></ul>',
 				),
+
+				/*
+				 * SQL file name template
+				 */
 				'file_name' => array(
 					'sanitise_callback' => array( &$this, 'sanitise_option_file_name' ),
 					'default' => '{date:YmdHis} {env} {database}.sql',
@@ -292,6 +299,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
 <li><code>{database}</code> ' . _x('The name of the database', 'field help: file_name {database} tag', 'lvl99-dbs').'</li>
 <li><code>{url}</code> ' . _x('The URL of the website (references constant <code>WP_HOME</code>)', 'field help: file_name {url} tag', 'lvl99-dbs') . '</li></ul>',
 				),
+
+				/*
+				 * Compression format
+				 */
 				'compress_format' => array(
 					'sanitise_callback' => array( &$this, 'sanitise_option_compress_format' ),
 					'values' => array(
@@ -309,7 +320,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					'label' => _x('Default file compression format', 'field label: compress_format', 'lvl99-dbs'),
 				),
 			);
-		
+
 			// Get the saved options
 			foreach ( $this->default_options as $name => $option  )
 			{
@@ -317,7 +328,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				register_setting( 'lvl99-dbs', 'lvl99-dbs/'.$name, $option['sanitise_callback'] );
 			}
 		}
-		
+
 		/*
 		@method sanitise_option_file_name
 		@since 0.0.1
@@ -327,10 +338,15 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		*/
 		public function sanitise_option_file_name( $input )
 		{
+			// Convert slashes to underscores (no subdirectories are supported yet)
+			$input = str_replace( '/["\']+/', '_', $input );
+
+			// Add .sql to the end if it doesn't already exist
 			if ( !preg_match('/\.sql$/i', $input ) ) $input .= '.sql';
+
 			return $input;
 		}
-		
+
 		/*
 		@method sanitise_option_compress_format
 		@since 0.0.1
@@ -358,11 +374,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					}
 				}
 			}
-			
+
 			// Couldn't find the value within the options' accepted values, use the default
 			return $this->default_options['compress_format']['default'];
 		}
-		
+
 		/*
 		@method sanitise_sql
 		@since 0.0.2
@@ -380,11 +396,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				'',
 				'',
 			);
-			
+
 			$output = preg_replace( $search, $replace, $input );
 			return $output;
 		}
-		
+
 		/*
 		@method get_option
 		@since 0.0.1
@@ -398,7 +414,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			if ( !$name || !array_key_exists($name, $this->options) ) return $default;
 			return isset($this->options[$name]) ? $this->options[$name] : $default;
 		}
-		
+
 		/*
 		@method get_option_path
 		@since 0.0.2
@@ -408,12 +424,17 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function get_option_path()
 		{
 			$path = $this->replace_tags( $this->get_option('path'), array(
-				'ABSPATH' => ABSPATH,
-				'WP_CONTENT_DIR' => WP_CONTENT_DIR,
+				'ABSPATH' => trailingslashit(ABSPATH),
+				'get_home_path' => trailingslashit(get_home_path()),
+				'WP_CONTENT_DIR' => trailingslashit(WP_CONTENT_DIR),
 			) );
-			return $path;
+
+			// Remove duplicate slashes
+			$path = preg_replace( '/[\/\\\\]+/', trailingslashit(''), $path );
+
+			return trailingslashit($path);
 		}
-		
+
 		/*
 		@method set_option
 		@since 0.0.1
@@ -428,7 +449,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			update_option( 'lvl99-dbs/'.$name, $value );
 			$this->options[$name] = $value;
 		}
-		
+
 		/*
 		@method enable_maintenance
 		@since 0.0.1
@@ -439,17 +460,17 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		{
 			$maintenance = trailingslashit(ABSPATH) . '.maintenance';
 			$_maintenance = trailingslashit($this->plugin_dir) . '.maintenance';
-			
+
 			// Maintenance mode already enabled
 			if ( file_exists($maintenance) ) return;
-			
+
 			// If maintenance file doesn't exist, create a new blank one to use
 			if ( !file_exists($_maintenance) ) $f_maintenance = fopen( $_maintenance, 'w' );
-			
+
 			// Copy the template to WP's abspath
 			copy( $_maintenance, $maintenance );
 		}
-		
+
 		/*
 		@method disable_maintenance
 		@since 0.0.1
@@ -459,14 +480,14 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function disable_maintenance()
 		{
 			$maintenance = trailingslashit(ABSPATH) . '.maintenance';
-			
+
 			// Maintenance file already removed
 			if ( !file_exists($maintenance) ) return;
-			
+
 			// Remove the file
 			unlink($maintenance);
 		}
-		
+
 		/*
 		@method admin_notice
 		@since 0.0.1
@@ -482,7 +503,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				'content' => $msg,
 			) );
 		}
-		
+
 		/*
 		@method admin_error
 		@since 0.0.1
@@ -498,7 +519,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			) );
 			error_log( sprintf( __('LVL99_DBS Error: %s', 'lvl99-dbs' ), $msg ) );
 		}
-		
+
 		/*
 		@method sql_tablelist
 		@since 0.0.1
@@ -508,12 +529,12 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function sql_tablelist()
 		{
 			global $wpdb;
-			
+
 			$this->check_admin();
-			
+
 			$tables = array();
 			$wpdb->query("SET NAMES 'utf8'");
-			
+
 			// Get all of the tables
 			$tables = array();
 			$result = $wpdb->get_results( 'SHOW TABLES', ARRAY_N );
@@ -522,10 +543,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				// Only show the tables which share the same prefix as this site
 				if ( preg_match( '/^'.$wpdb->prefix.'/i', $row[0] ) ) $tables[] = $row[0];
 			}
-			
+
 			return $tables;
 		}
-		
+
 		/*
 		@method sql_filelist
 		@since 0.0.1
@@ -535,17 +556,17 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function sql_filelist()
 		{
 			$this->check_admin();
-			
+
 			$files = array();
 			$path = $this->get_option_path();
-			
+
 			// Check the directory path for SQL files exists
 			if ( !file_exists($path) && !is_dir($path) )
 			{
 				$this->admin_error( sprintf( __('Error: Invalid path set', 'lvl99-dbs'), $path ) );
 				return $files;
 			}
-			
+
 			// Get the list of files within the directory
 			$dir_files = scandir( $path );
 			foreach( $dir_files as $file )
@@ -560,10 +581,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					) );
 				}
 			}
-			
+
 			return $files;
 		}
-		
+
 		/*
 		@method replace_tags
 		@since 0.0.2
@@ -575,8 +596,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function replace_tags( $input, $tags = array() )
 		{
 			$output = $input;
-			preg_match_all( '/\{[a-z0-9\:\_\-\/\\\]+\}/i', $input, $matches );
-			
+			preg_match_all( '/\{[a-z]+\:?[^\}]+\}/i', $input, $matches );
+
 			if ( count($matches[0]) )
 			{
 				foreach( $matches[0] as $tag )
@@ -584,20 +605,20 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					$tag_search = $tag;
 					$tag_name = preg_replace( '/[\{\}]/', '', $tag );
 					$tag_replace = '';
-					
+
 					// Get string to replace tag with
 					if ( array_key_exists( $tag_name, $tags ) != FALSE )
 					{
 						$tag_replace = $tags[$tag_name];
 					}
-					
+
 					// Tag has arguments
 					if ( strstr($tag_name, ':') != FALSE )
 					{
 						$tag_split = explode( ':', $tag_name );
-						$tag_name = $tag_split[0];
-						$tag_replace = $tag_split[1];
-						
+						$tag_name = strtolower(trim($tag_split[0]));
+						$tag_replace = trim($tag_split[1]);
+
 						// Supported special functions (defined by {function:argument})
 						switch ($tag_name)
 						{
@@ -606,52 +627,56 @@ if ( !class_exists( 'LVL99_DBS' ) )
 								break;
 						}
 					}
-					
+
 					// Replace
 					$output = str_replace( $tag_search, $tag_replace, $output );
 				}
 			}
-			
+
 			return $output;
 		}
-		
+
 		/*
 		@method build_file_name
 		@since 0.0.1
 		@description Builds the file name from the file_name option
 		@returns {String}
 		*/
-		public function build_file_name()
+		public function build_file_name( $file_name = FALSE )
 		{
-			$file_name = $this->get_option('file_name');
+			if ( !$file_name || !is_string($file_name) ) $file_name = $this->get_option('file_name');
+
+			// Replace tags
 			$output_file_name = $this->replace_tags( $file_name, array(
 				'url' => untrailingslashit( preg_replace('/[a-z]+\:\/\//', '', WP_HOME ) ),
 				'env' => defined('WP_ENV') ? WP_ENV : '',
 				'database' => DB_NAME,
 			) );
-			
+
 			if ( !preg_match('/\.sql$/i', $output_file_name ) ) $output_file_name .= '.sql';
 			return $output_file_name;
 		}
-		
+
 		/*
 		@method save_sql_file
 		@since 0.0.1
 		@description Saves the tables to a file at the path
 		@param {Mixed} $tables '*' {String} will save all the tables, an {Array} with table names will only save those selected tables
 		@param {String} $compression 'none' will save as text/plain, 'gzip' will save as a gz file
+		@param {Mixed} $file_name File name format as a {String} (if {Boolean} FALSE will use default)
 		@returns {Boolean}
 		*/
-		public function save_sql_file( $tables = '*', $compression = 'none' )
+		public function save_sql_file( $tables = '*', $compression = 'none', $file_name = FALSE )
 		{
 			global $wpdb;
-			
+
 			$this->check_admin();
-			
+
 			// Set the file's name and save path
-			$file_name = $this->build_file_name();
+			$file_name = $this->build_file_name( $file_name );
 			$file = $this->get_option_path() . $file_name;
-			
+			$pathinfo = pathinfo($file);
+
 			//get all of the tables
 			if ( $tables == '*' )
 			{
@@ -667,7 +692,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			{
 				$tables = is_array($tables) ? $tables : explode(',', $tables);
 			}
-			
+
 			// Create the return object
 			$return = '
 /*
@@ -684,21 +709,21 @@ if ( !class_exists( 'LVL99_DBS' ) )
 */
 
 ';
-			
+
 			// Cycle through
 			foreach( $tables as $table )
 			{
 				$result = $wpdb->get_results( 'SELECT * FROM ' . $table, ARRAY_N );
 				$num_fields = sizeof( $wpdb->get_results( 'DESCRIBE ' . $table, ARRAY_N ) );
-				
+
 				$return .= 'DROP TABLE '.$table.';';
 				$row2 = $wpdb->get_results( 'SHOW CREATE TABLE ' . $table, ARRAY_N );
 				$return .= "\n\n".$row2[0][1].";\n\n";
-				
-				foreach ( $result as $i => $row ) 
+
+				foreach ( $result as $i => $row )
 				{
 					$return.= 'INSERT INTO '.$table.' VALUES(';
-					for( $j=0; $j<$num_fields; $j++ ) 
+					for( $j=0; $j<$num_fields; $j++ )
 					{
 						$row[$j] = addslashes( $row[$j] );
 						$row[$j] = str_replace( "\n", "\\n", $row[$j] );
@@ -716,7 +741,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				}
 				$return .= "\n\n\n";
 			}
-		
+
 			// Compression
 			if ( $compression == 'gzip' )
 			{
@@ -724,16 +749,19 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$file_name .= '.gz';
 				$return = gzencode( $return );
 			}
-		
+
+			// Create subfolder if need to
+			if ( !file_exists($pathinfo['dirname']) ) mkdir( $pathinfo['dirname'], 0755, TRUE );
+
 			// Save file
-			$handle = fopen( $file, 'w+' );
+			$handle = fopen( $file, 'wb' );
 			fwrite( $handle, $return );
 			fclose( $handle );
-			
+
 			$this->admin_notice( sprintf( __('Database was successfully backed up to <strong><code>%s</code></strong>', 'lvl99-dbs'), $file_name ) );
 			return TRUE;
 		}
-		
+
 		/*
 		@method load_sql_file
 		@since 0.0.1
@@ -745,9 +773,9 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function load_sql_file( $file = FALSE, $postprocessing = FALSE )
 		{
 			global $wpdb;
-			
+
 			$this->check_admin();
-			
+
 			if ( !$file )
 			{
 				$this->admin_error( _x('No file was selected', 'No file specified for load_sql_file operation', 'lvl99-dbs') );
@@ -757,34 +785,34 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			// Make sure file exists in the path
 			$file_name = basename($file);
 			$file = $this->get_option_path() . $file;
-			
+
 			if ( !file_exists($file) )
 			{
 				$this->admin_error( sprintf( __('File does not exist at <strong><code>%s</code></strong>', 'lvl99-dbs'), $file ) );
 				return FALSE;
 			}
-			
+
 			// Enable maintenance mode
 			$this->enable_maintenance();
-			
+
 			// Temporary variable, used to store current query
 			$templine = '';
-			
+
 			// Read in entire file
 			$lines = file($file);
-			
+
 			// Uncompress
 			if ( preg_match( '/\.gz(ip)?$/i', $file ) != FALSE )
 			{
 				$lines = gzdecode( implode('', $lines) );
 				$lines = explode( "\n", $lines );
 			}
-			
+
 			// Post-processing
 			if ( is_array($postprocessing) && array_key_exists( 'search', $postprocessing ) && array_key_exists( 'replace', $postprocessing ) )
 			{
 				$lines = implode( "\n", $lines );
-				
+
 				// @TODO may need to chunk lines to avoid any lengthy timeouts, depending on how big the SQL file is
 				/*
 				echo '<pre>';
@@ -795,16 +823,16 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$lines = preg_replace( $postprocessing['search'], $postprocessing['replace'], $lines );
 				$lines = explode( "\n", $lines );
 			}
-			
+
 			// Loop through each line
 			foreach ($lines as $line)
 			{
 				// Skip it if it's a comment
 				if (substr($line, 0, 2) == '--' || $line == '') continue;
-				
+
 				// Add this line to the current segment
 				$templine .= $line;
-				
+
 				// If it has a semicolon at the end, it's the end of the query
 				if ( substr(trim($line), -1, 1) == ';' )
 				{
@@ -821,11 +849,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					}
 				}
 			}
-			
+
 			// Get time taken
 			$end = microtime( TRUE );
 			$time = round($end-$this->start, 2) . ' ' . __('seconds', 'Load SQL process time taken unit seconds', 'lvl99-dbs');
-			
+
 			// Success message
 			if ( defined('WP_CACHE') )
 			{
@@ -835,13 +863,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			{
 				$this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s)', 'lvl99-dbs'), $file_name, $time ) );
 			}
-			
+
 			// Disable maintenance
 			$this->disable_maintenance();
-			
+
 			return TRUE;
 		}
-		
+
 		/*
 		@method download_sql_file
 		@since 0.0.1
@@ -851,13 +879,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function download_sql_file( $file = FALSE )
 		{
 			$this->check_admin();
-			
+
 			if ( !$file )
 			{
 				$this->admin_error( _x('No file was selected', 'Error loading an SQL file', 'lvl99-dbs') );
 				return FALSE;
 			}
-			
+
 			// Make sure file exists in the path
 			$file_name = basename($file);
 			$file = $this->get_option_path() . $file_name;
@@ -866,7 +894,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$this->admin_error( sprintf( __('<strong><code>%s</code></strong> does not exist on the server.', 'lvl99-dbs'), $file_name ) );
 				return FALSE;
 			}
-			
+
 			// Send the file to the user's browser
 			header('Cache-Control: public');
 			header('Content-Description: File Transfer');
@@ -875,7 +903,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			readfile($file);
 			exit();
 		}
-		
+
 		/*
 		@method delete_sql_file
 		@since 0.0.1
@@ -885,13 +913,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function delete_sql_file( $file = FALSE )
 		{
 			$this->check_admin();
-			
+
 			if ( !$file )
 			{
 				$this->admin_error( _x('No file was selected', 'Error deleting an SQL file', 'lvl99-dbs') );
 				return FALSE;
 			}
-			
+
 			// Make sure file exists in the path
 			$file_name = basename($file);
 			$file = $this->get_option_path() . $file;
@@ -900,7 +928,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$this->admin_error( sprintf( __('File does not exist at <strong><code>%s</code></strong>', 'lvl99-dbs'), $file ) );
 				return FALSE;
 			}
-			
+
 			// Delete the file
 			if ( unlink( $file ) )
 			{
@@ -913,7 +941,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				return FALSE;
 			}
 		}
-		
+
 		/*
 		@method detect_route
 		@since 0.0.1
@@ -923,7 +951,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function detect_route()
 		{
 			$this->check_admin();
-			
+
 			if ( isset($_REQUEST['lvl99_dbs']) && !empty($_REQUEST['lvl99_dbs']) )
 			{
 				// Process request params
@@ -931,7 +959,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					'get' => $_GET,
 					'post' => $_POST,
 				);
-				
+
 				$request = array();
 				foreach ( $_request as $_method => $_array )
 				{
@@ -944,20 +972,20 @@ if ( !class_exists( 'LVL99_DBS' ) )
 						}
 					}
 				}
-				
+
 				// Build and set the route to the class for later referral when running the route's method
 				$this->route = array(
 					'method' => 'route_' . preg_replace( '/[^a-z0-9_]+/i', '', $_REQUEST['lvl99_dbs'] ),
 					'referrer' => $_SERVER['HTTP_REFERER'],
 					'request' => $request,
 				);
-				
+
 				// Fire the method
 				$this->perform_route();
 				// add_action( 'plugins_loaded', array( &$this, $this->route['method'] ), 9999 );
 			}
 		}
-		
+
 		/*
 		@method perform_route
 		@since 0.0.1
@@ -967,7 +995,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function perform_route()
 		{
 			$this->check_admin();
-			
+
 			if ( method_exists( $this, $this->route['method'] ) )
 			{
 				call_user_func( array( &$this, $this->route['method'] ) );
@@ -977,7 +1005,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$this->admin_error( sprintf( __('Invalid route method was called: <strong><code>%s</code></strong>', 'lvl99-dbs'), $this->route['method'] ) );
 			}
 		}
-		
+
 		/*
 		@method route_save
 		@since 0.0.1
@@ -987,7 +1015,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function route_save()
 		{
 			$this->check_admin();
-			
+
+			// Tables
 			$tables = '*';
 			if ( isset($this->route['request']['post']['tables']) )
 			{
@@ -996,7 +1025,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					$tables = $this->route['request']['post']['tables_selected'];
 				}
 			}
-			
+
+			// Compression format
 			$compression = $this->get_option('compress_format');
 			if ( isset($this->route['request']['post']['compression']) )
 			{
@@ -1005,10 +1035,17 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					$compression = 'gzip';
 				}
 			}
-			
-			$this->save_sql_file( $tables, $compression );
+
+			// File name format
+			$file_name = $this->get_option('file_name');
+			if ( isset($this->route['request']['post']['file_name']) )
+			{
+				$file_name = $this->sanitise_option_file_name($this->route['request']['post']['file_name']);
+			}
+
+			$this->save_sql_file( $tables, $compression, $file_name );
 		}
-		
+
 		/*
 		@method route_load
 		@since 0.0.1
@@ -1018,14 +1055,14 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function route_load()
 		{
 			$this->check_admin();
-			
+
 			// Error
 			if ( !isset($this->route['request']['post']['file']) && !isset($this->route['request']['post']['fileupload']) )
 			{
 				$this->admin_error( _x('No file was selected nor uploaded.', 'Error loading/uploading SQL file', 'lvl99-dbs') );
 				return;
 			}
-			
+
 			// Detect if any post-processing is needed and prepare the object
 			$postprocessing = FALSE;
 			if (  isset($this->route['request']['post']['postprocessing_search'])  &&
@@ -1037,7 +1074,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					'search' => $this->route['request']['post']['postprocessing_search'],
 					'replace' => $this->route['request']['post']['postprocessing_replace'],
 				);
-				
+
 				// Format the post-processing object
 				$postprocessing = array();
 				// -- Process each processing type
@@ -1056,7 +1093,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 						}
 					}
 					$_postprocessing[$type] = $values;
-					
+
 					// Process each processing value
 					foreach( $values as $key => $value )
 					{
@@ -1068,19 +1105,19 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				}
 				$postprocessing = $_postprocessing;
 			}
-			
+
 			// Use an existing file hosted on the server
 			if ( isset($this->route['request']['post']['file']) && !empty($this->route['request']['post']['file']) )
 			{
 				$this->load_sql_file( $this->route['request']['post']['file'], $postprocessing );
 			}
-			
+
 			// Use an uploaded file
 			if ( isset($this->route['request']['post']['fileupload']) && !empty($this->route['request']['post']['fileupload']) )
 			{
 				$uploaded_file = $this->route['request']['post']['fileupload']['name'];
 				$upload_path = $this->get_option_path() . $uploaded_file;
-				
+
 				// Checks
 				// -- Duplicate name
 				if ( file_exists($upload_path) )
@@ -1088,14 +1125,14 @@ if ( !class_exists( 'LVL99_DBS' ) )
 					$uploaded_file = preg_replace( '/(\.sql(\.gz)?)$/', md5(time()) . '$1', $uploaded_file );
 					$upload_path = $this->get_option_path() . $uploaded_file;
 				}
-				
+
 				// -- PHP file
 				if ( strstr($uploaded_file, '.php') != FALSE )
 				{
 					admin_error( __('PHP files may not be uploaded.', 'lvl99-dbs') );
 					return;
 				}
-				
+
 				// Move the uploaded file
 				if ( move_uploaded_file( $upload_path ) )
 				{
@@ -1109,7 +1146,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				}
 			}
 		}
-		
+
 		/*
 		@method route_download
 		@since 0.0.1
@@ -1119,14 +1156,14 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function route_download()
 		{
 			$this->check_admin();
-			
+
 			// Use an existing file hosted on the server
 			if ( isset($this->route['request']['get']['file']) && !empty($this->route['request']['get']['file']) )
 			{
 				$this->download_sql_file( $this->route['request']['get']['file'] );
 			}
 		}
-		
+
 		/*
 		@method route_delete
 		@since 0.0.1
@@ -1136,7 +1173,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function route_delete()
 		{
 			$this->check_admin();
-			
+
 			// Use an existing file hosted on the server
 			if ( isset($this->route['request']['get']['file']) && !empty($this->route['request']['get']['file']) )
 			{
@@ -1145,7 +1182,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				exit();
 			}
 		}
-		
+
 		/*
 		@method admin_menu
 		@since 0.0.1
@@ -1155,11 +1192,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function admin_menu()
 		{
 			$this->check_admin();
-			
+
 			add_management_page( __('Database Sync', 'lvl99-dbs'), __('Database Sync', 'lvl99-dbs'), 'activate_plugins', 'lvl99-dbs', array( &$this, 'view_admin_index' ) );
 			add_options_page( __('Database Sync', 'lvl99-dbs'), __('Database Sync', 'lvl99-dbs'), 'activate_plugins', 'lvl99-dbs-options', array( &$this, 'view_admin_options' ) );
 		}
-		
+
 		/*
 		@method admin_plugin_links
 		@since 0.0.1
@@ -1175,7 +1212,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			);
 			return array_merge( $plugin_links, $links );
 		}
-		
+
 		/*
 		@method admin_notices
 		@since 0.0.1
@@ -1185,7 +1222,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function admin_notices()
 		{
 			$this->check_admin();
-			
+
 			if ( count($this->notices) > 0 )
 			{
 				foreach( $this->notices as $notice )
@@ -1198,7 +1235,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				}
 			}
 		}
-		
+
 		/*
 		@method view_admin_index
 		@since 0.0.1
@@ -1208,12 +1245,12 @@ if ( !class_exists( 'LVL99_DBS' ) )
 		public function view_admin_index()
 		{
 			$this->check_admin();
-			
+
 			$tablelist = $this->sql_tablelist();
 			$filelist = $this->sql_filelist();
 			include( trailingslashit($this->plugin_dir) . 'views/admin-index.php' );
 		}
-		
+
 		/*
 		@method view_admin_options
 		@since 0.0.1
@@ -1225,7 +1262,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 			$this->check_admin();
 			include( trailingslashit($this->plugin_dir) . 'views/admin-options.php' );
 		}
-		
+
 		/*
 		@method format_file_size
 		@since 0.0.2

@@ -5,25 +5,26 @@
  */
 
 if ( !defined('ABSPATH') || !defined('WP_LVL99_DBS') ) exit('No direct access allowed');
+
 global $lvl99_dbs;
 ?>
 
 <div class="wrap">
 	<h2><?php _e('Database Sync', 'lvl99-dbs'); ?></h2>
-	
+
 	<h2 class="nav-tab-wrapper">
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=save" class="nav-tab"><?php _ex('Save', 'Save SQL page tab', 'lvl99-dbs'); ?></a>
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=load" class="nav-tab nav-tab-active"><?php _ex('Load', 'Load SQL page tab', 'lvl99-dbs'); ?></a>
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/options-general.php?page=lvl99-dbs-options" class="nav-tab"><?php _ex('Options', 'Options page tab', 'lvl99-dbs'); ?></a>
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=help" class="nav-tab"><?php _ex('Help', 'Help page tab', 'lvl99-dbs'); ?></a>
 	</h2>
-	
+
 	<div class="lvl99-dbs-page">
 		<form method="post" enctype="multipart/form-data">
 			<input type="hidden" name="lvl99_dbs" value="load" />
-			
+
 			<div class="lvl99-dbs-intro"><?php _ex('Restores database tables from a selected file. Please note that this will overwrite your existing database tables.', 'Load SQL page description', 'lvl99-dbs'); ?></div>
-			
+
 			<table class="form-table">
 				<tbody>
 					<?php if ( count($filelist) > 0 ) : ?>
@@ -55,7 +56,7 @@ global $lvl99_dbs;
 											<label for="<?php echo $file_id; ?>"><?php echo date( get_option('date_format').' h:i:s', $file['created'] ); ?></label>
 										</td>
 										<td class="lvl99-dbs-filelist-col-controls">
-											<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&lvl99_dbs=download&lvl99_dbs_file=<?php echo urlencode($file['file_name']); ?>" class="button button-secondary"><span class="fa fa-download"></span> <?php _ex('Download', 'button label download sql file', 'lvl99-dbs'); ?></a> 
+											<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&lvl99_dbs=download&lvl99_dbs_file=<?php echo urlencode($file['file_name']); ?>" class="button button-secondary"><span class="fa fa-download"></span> <?php _ex('Download', 'button label download sql file', 'lvl99-dbs'); ?></a>
 											<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&lvl99_dbs=delete&lvl99_dbs_file=<?php echo urlencode($file['file_name']); ?>" class="button button-secondary deletion"><span class="fa fa-delete"></span> <?php _ex('Delete', 'button label delete sql file', 'lvl99-dbs'); ?></a>
 										</td>
 									</tr>

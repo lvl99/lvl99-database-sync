@@ -5,25 +5,26 @@
  */
 
 if ( !defined('ABSPATH') || !defined('WP_LVL99_DBS') ) exit('No direct access allowed');
+
 global $lvl99_dbs;
 ?>
 
 <div class="wrap">
 	<h2><?php _e('Database Sync', 'lvl99-dbs'); ?></h2>
-	
+
 	<h2 class="nav-tab-wrapper">
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=save" class="nav-tab nav-tab-active"><?php _ex('Save', 'Save SQL page tab', 'lvl99-dbs'); ?></a>
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=load" class="nav-tab"><?php _ex('Load', 'Load SQL page tab', 'lvl99-dbs'); ?></a>
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/options-general.php?page=lvl99-dbs-options" class="nav-tab"><?php _ex('Options', 'Options page tab', 'lvl99-dbs'); ?></a>
 		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=help" class="nav-tab"><?php _ex('Help', 'Help page tab', 'lvl99-dbs'); ?></a>
 	</h2>
-	
+
 	<div class="lvl99-dbs-page">
 		<form method="post">
 			<input type="hidden" name="lvl99_dbs" value="save" />
-			
+
 			<div class="lvl99-dbs-intro"><?php _ex('Saves your WP database to an SQL file.', 'Save SQL page description', 'lvl99-dbs'); ?></div>
-			
+
 			<table class="form-table">
 				<tbody>
 					<tr>
@@ -42,6 +43,15 @@ global $lvl99_dbs;
 								</li>
 								<?php endif; ?>
 							</ul>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo $lvl99_dbs->default_options['file_name']['label']; ?></th>
+						<td>
+							<input type="text" name="lvl99_dbs_file_name" value="<?php echo $lvl99_dbs->get_option('file_name'); ?>" class="widefat" />
+							<div class="lvl99-dbs-option-help">
+								<?php echo $lvl99_dbs->default_options['file_name']['help']; ?>
+							</div>
 						</td>
 					</tr>
 					<tr>
