@@ -716,7 +716,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 				$result = $wpdb->get_results( 'SELECT * FROM ' . $table, ARRAY_N );
 				$num_fields = sizeof( $wpdb->get_results( 'DESCRIBE ' . $table, ARRAY_N ) );
 
-				$return .= 'DROP TABLE '.$table.';';
+				$return .= 'DROP TABLE IF EXISTS '.$table.';';
 				$row2 = $wpdb->get_results( 'SHOW CREATE TABLE ' . $table, ARRAY_N );
 				$return .= "\n\n".$row2[0][1].";\n\n";
 
