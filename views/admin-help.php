@@ -21,17 +21,17 @@ global $lvl99_dbs;
 
 	<div class="lvl99-dbs-page">
 
-		<h2>LVL99 Database Sync <small>v<?php echo $lvl99_dbs::VERSION; ?></small></h2>
+		<h2>LVL99 Database Sync <small>v<?php echo $lvl99_dbs->version; ?></small></h2>
 		<div class="lvl99-dbs-intro">
 			<p><b>LVL99 Database Sync</b> is a WordPress plugin which allows you to easily save your WP database to an SQL file, and to also restore a database from an SQL file.</p>
 			<p>Created and maintained by <a href="mailto:matt@lvl99.com?subject=LVL99 Database Sync">Matt Scheurich</a></p>
 		</div>
 
 		<div class="lvl99-dbs-section">
-			<p>It's creation was inspired by how I manage WP site development. I often have a local development server, a staging server and a live server. These can all each have their own database or a shared database (often I have two staging servers: one which uses local development server files and database, the other uses local development server files and the staging server's database). I've found it frustrating keeping database entries consistent across multiple sites/databases, so I figured I'd create an easy and simple solution to save and load SQL data.</p>
+			<p>Its creation was inspired by how I manage WP site development. I often have a local development server, a staging server and a live server. These can all each have their own database or a shared database (often I have two staging servers: one which uses local development server files and database, the other uses local development server files and the staging server's database). I've found it frustrating keeping database entries consistent across multiple sites/databases, so I figured I'd create an easy and simple solution to save and load SQL data.</p>
 			<p>Since I also use <a href="http://git-scm.com/" target="_blank">git</a> I can use that to watch the directory where the SQL files are located and using a file naming scheme I can save and restore per development environment.</p>
 			<ul class="list-text">
-				<li>Visit <a href="http://www.lvl99.com/code/database-sync/" target="_blank">lvl99.com/code/database-sync</a> for news and updates</li>
+				<li>Visit <a href="http://github.com/lvl99/lvl99-database-sync" target="_blank">github.com/lvl99/lvl99-database-sync</a> for news and updates</li>
 				<li>Fork development of this plugin at <a href="http://github.com/lvl99/lvl99-database-sync" target="_blank">github.com/lvl99/lvl99-database-sync</a></li>
 				<li>Consider supporting this free plugin's creation and development by donating via the methods below:<br/>
 					<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">

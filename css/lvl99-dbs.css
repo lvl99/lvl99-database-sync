@@ -51,3 +51,43 @@
 .list-text li {
   list-style: disc;
 }
+.clearfix:before,
+.clearfix:after {
+  content: ' ';
+  display: table;
+}
+.clearfix:after {
+  clear: both;
+}
+.lvl99-dbs-filter-item {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+.lvl99-dbs-filter-item:before,
+.lvl99-dbs-filter-item:after {
+  content: ' ';
+  display: table;
+}
+.lvl99-dbs-filter-item:after {
+  clear: both;
+}
+.lvl99-dbs-filter-method,
+.lvl99-dbs-filter-input,
+.lvl99-dbs-filter-output,
+.lvl99-dbs-filter-controls {
+  float: left;
+  line-height: 2em;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+.lvl99-dbs-filter-input input[type=text],
+.lvl99-dbs-filter-output input[type=text] {
+  width: 100%;
+  min-width: 200px;
+  box-sizing: border-box;
+  padding: 0.3em;
+}
+.lvl99-dbs-tablelist {
+  padding-top: 1em;
+  padding-left: 1em;
+}

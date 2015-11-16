@@ -21,7 +21,7 @@ global $lvl99_dbs;
 
 	<div class="lvl99-dbs-page">
 		<form method="post">
-			<input type="hidden" name="lvl99_dbs" value="save" />
+			<input type="hidden" name="lvl99-dbs" value="save" />
 
 			<div class="lvl99-dbs-intro"><?php _ex('Saves your WP database to an SQL file.', 'Save SQL page description', 'lvl99-dbs'); ?></div>
 
@@ -31,13 +31,13 @@ global $lvl99_dbs;
 						<th scope="row"><?php _ex('Select tables to save to SQL', 'field label: tables', 'lvl99-dbs'); ?></th>
 						<td>
 							<ul class="lvl99-dbs-tables">
-								<li class="lvl99-dbs-tables-all"><label><input type="radio" name="lvl99_dbs_tables" value="all" checked="checked"/> <?php _ex('Back up all tables', 'field value: tables=all', 'lvl99-dbs'); ?></label></li>
+								<li class="lvl99-dbs-tables-all"><label><input type="radio" name="lvl99-dbs_tables" value="all" checked="checked"/> <?php _ex('Back up all tables', 'field value: tables=all', 'lvl99-dbs'); ?></label></li>
 								<?php if ( count($tablelist) > 0 ) : ?>
 								<li  class="lvl99-dbs-tables-selected">
-									<label><input type="radio" name="lvl99_dbs_tables" value="selected" /> <?php _ex('Back up only selected tables', 'field value: tables=some', 'lvl99-dbs'); ?></label>
+									<label><input type="radio" name="lvl99-dbs_tables" value="selected" /> <?php _ex('Back up only selected tables', 'field value: tables=some', 'lvl99-dbs'); ?></label>
 									<ul class="lvl99-dbs-tablelist">
 									<?php foreach( $tablelist as $table ) : ?>
-										<li class="lvl99-dbs-tablelist-table"><label><input type="checkbox" name="lvl99_dbs_tables_selected[]" value="<?php echo esc_attr($table); ?>" checked="checked" /> <?php echo $table; ?></label></li>
+										<li class="lvl99-dbs-tablelist-table"><label><input type="checkbox" name="lvl99-dbs_tables_selected[]" value="<?php echo esc_attr($table); ?>" checked="checked" disabled="disabled" /> <?php echo $table; ?></label></li>
 									<?php endforeach; ?>
 									</ul>
 								</li>
@@ -48,7 +48,7 @@ global $lvl99_dbs;
 					<tr>
 						<th scope="row"><?php echo $lvl99_dbs->default_options['file_name']['label']; ?></th>
 						<td>
-							<input type="text" name="lvl99_dbs_file_name" value="<?php echo $lvl99_dbs->get_option('file_name'); ?>" class="widefat" />
+							<input type="text" name="lvl99-dbs_file_name" value="<?php echo $lvl99_dbs->get_option('file_name'); ?>" class="widefat" />
 							<div class="lvl99-dbs-option-help">
 								<?php echo $lvl99_dbs->default_options['file_name']['help']; ?>
 							</div>
@@ -59,14 +59,14 @@ global $lvl99_dbs;
 						<td>
 							<ul>
 								<?php foreach( $lvl99_dbs->default_options['compress_format']['values'] as $option ) : ?>
-								<li><label><input type="radio" name="lvl99_dbs_compression" value="<?php echo $option['value']; ?>" <?php if ($option['value'] == $lvl99_dbs->default_options['compress_format']['default']) : ?>checked="checked"<?php endif; ?>/> <?php echo $option['label']; ?></label></li>
+								<li><label><input type="radio" name="lvl99-dbs_compression" value="<?php echo $option['value']; ?>" <?php if ($option['value'] == $lvl99_dbs->default_options['compress_format']['default']) : ?>checked="checked"<?php endif; ?>/> <?php echo $option['label']; ?></label></li>
 								<?php endforeach; ?>
 							</ul>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row">&nbsp;</th>
-						<td><input type="submit" name="lvl99_dbs_submit" value="<?php _ex('Save SQL file', 'Save SQL page button-submit label', 'lvl99-dbs'); ?>" class="button button-primary" /></td>
+						<td><input type="submit" name="lvl99-dbs_submit" value="<?php _ex('Save SQL file', 'Save SQL page button-submit label', 'lvl99-dbs'); ?>" class="button button-primary" /></td>
 					</tr>
 				</tbody>
 			</table>

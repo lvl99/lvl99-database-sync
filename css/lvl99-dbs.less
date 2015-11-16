@@ -5,31 +5,31 @@
 		width: 5%;
 		text-align: center;
 	}
-	
+
 	th.lvl99-dbs-filelist-col-file,
 	td.lvl99-dbs-filelist-col-file {
 		width: 45%;
 		text-align: left;
 	}
-	
+
 	th.lvl99-dbs-filelist-col-size,
 	td.lvl99-dbs-filelist-col-size {
 		width: 15%;
 		text-align: center;
 	}
-	
+
 	th.lvl99-dbs-filelist-col-created,
 	td.lvl99-dbs-filelist-col-created {
 		width: 15%;
 		text-align: center;
 	}
-	
+
 	th.lvl99-dbs-filelist-col-controls,
 	td.lvl99-dbs-filelist-col-controls {
 		width: 20%;
 		text-align: center;
 	}
-	
+
 }
 
 .lvl99-dbs-page {
@@ -42,11 +42,11 @@
 .lvl99-dbs-intro {
 	padding-bottom: 1em;
 	margin: 1em 0 1em;
-	
+
 	border-bottom: solid 1px #e5e5e5;
 	font-size: 1.2em;
 	line-height: 1.4em;
-	
+
 	p {
 		font-size: 1.1em;
 		line-height: 1.4em;
@@ -61,8 +61,51 @@
 	display: block;
 	list-style: disc;
 	margin-left: 2em;
-	
+
 	li {
 		list-style: disc;
 	}
+}
+
+.clearfix {
+  &:before,
+  &:after {
+    content: ' ';
+    display: table;
+  }
+
+  &:after {
+    clear: both;
+  }
+}
+
+.lvl99-dbs-filter-item {
+  .clearfix;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+.lvl99-dbs-filter-method,
+.lvl99-dbs-filter-input,
+.lvl99-dbs-filter-output,
+.lvl99-dbs-filter-controls {
+  float: left;
+  line-height: 2em;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+.lvl99-dbs-filter-input,
+.lvl99-dbs-filter-output {
+  input[type=text] {
+    width: 100%;
+    min-width: 200px;
+    box-sizing: border-box;
+    padding: 0.3em;
+  }
+}
+
+.lvl99-dbs-tablelist {
+	padding-top: 1em;
+	padding-left: 1em;
 }

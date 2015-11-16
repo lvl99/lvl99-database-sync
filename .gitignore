@@ -1,7 +1,19 @@
+# Important
 !.gitignore
 !.maintenance
 
+# Operating system files
+.Spotlight-V100
+.Trashes
 .DS_Store
+.DS_Store?
+ehthumbs.db
 Thumbs.db
-.directory
 
+# Node/Bower
+bower_components
+node_modules
+
+# Ignore automatically generated cruft
+*.log
+.sass-cache

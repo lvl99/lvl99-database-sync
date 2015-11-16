@@ -7,6 +7,18 @@
 if ( !defined('ABSPATH') || !defined('WP_LVL99_DBS') ) exit('No direct access allowed');
 
 global $lvl99_dbs;
+
+$textdomain = $lvl99_dbs->get_textdomain();
+
+// Saved options to reuse
+$posted = NULL;
+if ( !empty($lvl99_image_import->route['request']) )
+{
+  $posted = $lvl99_image_import->route['request']['post'];
+}
+
+// Filters
+$filters = isset($posted['filters']) ? $posted['filters'] : array();
 ?>
 
 <div class="wrap">
@@ -21,7 +33,7 @@ global $lvl99_dbs;
 
 	<div class="lvl99-dbs-page">
 		<form method="post" enctype="multipart/form-data">
-			<input type="hidden" name="lvl99_dbs" value="load" />
+			<input type="hidden" name="lvl99-dbs" value="load" />
 
 			<div class="lvl99-dbs-intro"><?php _ex('Restores database tables from a selected file. Please note that this will overwrite your existing database tables.', 'Load SQL page description', 'lvl99-dbs'); ?></div>
 
@@ -44,7 +56,7 @@ global $lvl99_dbs;
 									<tr class="lvl99-dbs-filelist-file">
 										<?php $file_id = md5($file['file_name']); ?>
 										<td class="lvl99-dbs-filelist-col-radio">
-											<input id="<?php echo $file_id; ?>" type="radio" name="lvl99_dbs_file" value="<?php echo esc_attr($file['file_name']); ?>" />
+											<input id="<?php echo $file_id; ?>" type="radio" name="lvl99-dbs_file" value="<?php echo esc_attr($file['file_name']); ?>" />
 										</td>
 										<td class="lvl99-dbs-filelist-col-file">
 											<label for="<?php echo $file_id; ?>"><?php echo $file['file_name']; ?></label>
@@ -56,8 +68,8 @@ global $lvl99_dbs;
 											<label for="<?php echo $file_id; ?>"><?php echo date( get_option('date_format').' h:i:s', $file['created'] ); ?></label>
 										</td>
 										<td class="lvl99-dbs-filelist-col-controls">
-											<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&lvl99_dbs=download&lvl99_dbs_file=<?php echo urlencode($file['file_name']); ?>" class="button button-secondary"><span class="fa fa-download"></span> <?php _ex('Download', 'button label download sql file', 'lvl99-dbs'); ?></a>
-											<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&lvl99_dbs=delete&lvl99_dbs_file=<?php echo urlencode($file['file_name']); ?>" class="button button-secondary deletion"><span class="fa fa-delete"></span> <?php _ex('Delete', 'button label delete sql file', 'lvl99-dbs'); ?></a>
+											<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&lvl99-dbs=download&lvl99-dbs_file=<?php echo urlencode($file['file_name']); ?>" class="button button-secondary"><span class="fa fa-download"></span> <?php _ex('Download', 'button label download sql file', 'lvl99-dbs'); ?></a>
+											<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&lvl99-dbs=delete&lvl99-dbs_file=<?php echo urlencode($file['file_name']); ?>" class="button button-secondary deletion"><span class="fa fa-delete"></span> <?php _ex('Delete', 'button label delete sql file', 'lvl99-dbs'); ?></a>
 										</td>
 									</tr>
 									<?php endforeach; ?>
@@ -75,8 +87,9 @@ global $lvl99_dbs;
 					<?php endif; ?>
 					<tr>
 						<th scope="row"><?php _ex('Upload SQL file', 'field label: fileupload', 'lvl99-dbs'); ?></th>
-						<td><input type="file" name="lvl99_dbs_fileupload" value="" /></td>
+						<td><input type="file" name="lvl99-dbs_fileupload" value="" /></td>
 					</tr>
+					<?php /*
 					<tr>
 						<th scope="row"><?php _ex('Post-processing', 'field label: postprocessing', 'lvl99-dbs'); ?></th>
 						<td>
@@ -89,23 +102,59 @@ global $lvl99_dbs;
 									<td style="width: 50%">
 										<label>
 											<h4>Search</h4>
-											<textarea name="lvl99_dbs_postprocessing_search" style="width: 100%; height: 8em"></textarea>
+											<textarea name="lvl99-dbs_postprocessing_search" style="width: 100%; height: 8em"></textarea>
 										</label>
 									</td>
 									<td style="width: 50%">
 										<label>
 											<h4>Replace</h4>
-											<textarea name="lvl99_dbs_postprocessing_replace" style="width: 100%; height: 8em"></textarea>
+											<textarea name="lvl99-dbs_postprocessing_replace" style="width: 100%; height: 8em"></textarea>
 										</label>
 									</td>
 								</tr>
 							</table>
 						</td>
-					</tr>
+					</tr> */ ?>
+
+					<tr>
+						<th scope="row"><?php _ex('Filters', 'field label: filters', 'lvl99-dbs'); ?></th>
+						<td>
+							<div class="lvl99-plugin-option-help">
+								<p>Apply filters to search and replace any text within the loaded SQL file before being applied to the database. This is useful when migrating databases across differing domain names.</p>
+								<p class="small">Plain text matches work, and if you're fancy you can also use <a href="http://www.regex101.com" target="_blank">PCRE regular expressions</a>. <b>Note:</b> The order of filters matters.</p>
+							</div>
+
+							<div class="lvl99-dbs-filters lvl99-sortable">
+								<?php foreach ( $filters as $num => $filter ) : ?>
+								<?php $rand = substr(md5($num), 0, 8); ?>
+								<div class="lvl99-dbs-filter-item ui-draggable ui-sortable">
+									<div class="lvl99-dbs-filter-method">
+										<span class="fa-arrows-v lvl99-sortable-handle"></span>
+										<select name="<?php echo esc_attr($textdomain); ?>_filters[<?php echo $rand; ?>][method]">
+											<option value="replace"<?php if ($filter['method'] == 'replace') : ?> selected="selected"<?php endif; ?>>Search &amp; Replace</option>
+										</select>
+									</div>
+									<div class="lvl99-dbs-filter-input">
+										<input type="text" name="<?php echo esc_attr($textdomain); ?>_filters[<?php echo $rand; ?>][input]" value="<?php echo esc_attr(stripslashes($filter['input'])); ?>" placeholder="Search for..." />
+									</div>
+									<div class="lvl99-dbs-filter-output">
+										<input type="text" name="<?php echo esc_attr($textdomain); ?>_filters[<?php echo $rand; ?>][output]" value="<?php echo esc_attr($filter['output']); ?>" placeholder="Replace with empty string" />
+									</div>
+									<div class="lvl99-dbs-filter-controls">
+										<a href="#remove-filter" class="button button-secondary button-small">Remove</a>
+									</div>
+								</div>
+								<?php endforeach; ?>
+							</div>
+
+							<p><a href="#add-filter" class="button button-secondary"><?php echo __( 'Add Filter', $textdomain ); ?></a></p>
+						</div>
+					</td>
+
 					<tr>
 						<th scope="row">&nbsp;</th>
 						<td>
-							<input type="submit" name="lvl99_dbs_submit" value="<?php _ex('Load and process SQL file', 'Load SQL page button submit label', 'lvl99-dbs'); ?>" class="button button-primary" />
+							<input type="submit" name="lvl99-dbs_submit" value="<?php _ex('Load and process SQL file', 'Load SQL page button submit label', 'lvl99-dbs'); ?>" class="button button-primary" />
 						</td>
 					</tr>
 				</tbody>
