@@ -41,7 +41,7 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 				<tbody>
 					<?php if ( count($filelist) > 0 ) : ?>
 					<tr>
-						<th scope="row"><?php _ex('Select SQL file', 'field label: file', 'lvl99-dbs'); ?></th>
+						<th scope="row"><?php _ex('Select SQL file...', 'field label: file', 'lvl99-dbs'); ?></th>
 						<td>
 							<table class="wp-list-table widefat fixed lvl99-dbs-filelist">
 								<thead>
@@ -86,7 +86,7 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 					</tr>
 					<?php endif; ?>
 					<tr>
-						<th scope="row"><?php _ex('Upload SQL file', 'field label: fileupload', 'lvl99-dbs'); ?></th>
+						<th scope="row"><?php _ex('... or upload SQL file', 'field label: fileupload', 'lvl99-dbs'); ?></th>
 						<td><input type="file" name="lvl99-dbs_fileupload" value="" /></td>
 					</tr>
 					<?php /*
@@ -120,7 +120,7 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 						<th scope="row"><?php _ex('Filters', 'field label: filters', 'lvl99-dbs'); ?></th>
 						<td>
 							<div class="lvl99-plugin-option-help">
-								<p>Apply filters to search and replace any text within the loaded SQL file before being applied to the database. This is useful when migrating databases across differing domain names.</p>
+								<p>Apply filters to search and replace any text within the loaded SQL file before being applied to the database. This is useful when migrating databases across differing domain names and you need to change domain names and file paths.</p>
 								<p class="small">Plain text matches work, and if you're fancy you can also use <a href="http://www.regex101.com" target="_blank">PCRE regular expressions</a>. <b>Note:</b> The order of filters matters.</p>
 							</div>
 
@@ -148,8 +148,31 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 							</div>
 
 							<p><a href="#add-filter" class="button button-secondary"><?php echo __( 'Add Filter', $textdomain ); ?></a></p>
+
+							<div class="lvl99-plugin-option-help" style="margin-top: 2em">
+								<dl>
+									<dt>ABSPATH</dt>
+									<dd><code><?php echo ABSPATH; ?></code></dd>
+									<dt>WP_HOME</dt>
+									<dd><code><?php echo WP_HOME; ?></code></dd>
+									<dt>WP_SITEURL</dt>
+									<dd><code><?php echo WP_SITEURL; ?></code></dd>
+								</dl>
+							</div>
 						</div>
 					</td>
+
+					<tr>
+						<th scope="row">Execution options</th>
+						<td>
+							<ul>
+								<li><label><input type="checkbox" name="lvl99-dbs_savetonewfile" value="1" /> <strong>Save to new SQL file</strong><br/>
+									<p class="small">Ideal if you want to test the filters' outputted results first before applying to a database (use in conjunction with "Dry Run") or keep a record of filtered SQL file for future.</p></label></li>
+								<li><label><input type="checkbox" name="lvl99-dbs_dryrun" value="1" checked="checked" /> <strong>Dry run</strong><br/>
+									<p class="small">Performs all actions normally without modifying the database</p></label></li>
+							</ul>
+						</td>
+					</tr>
 
 					<tr>
 						<th scope="row">&nbsp;</th>

@@ -120,6 +120,16 @@ if ( !class_exists( 'LVL99_DBS' ) )
     private $textdomain = 'lvl99-dbs';
 
     /*
+    Log file reference
+
+    @property $log_file
+    @since 0.1.0
+    @private
+    @type {String}
+    */
+    private $log_file = 'lvl99-dbs.log';
+
+    /*
     @method __construct
     @since 0.0.1
     @description PHP magic method which runs when class is created
@@ -169,7 +179,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
     */
     public function i18n()
     {
-      load_plugin_textdomain( 'lvl99-dbs', FALSE, basename( dirname(__FILE__) ) . '/languages' );
+      load_plugin_textdomain( $this->textdomain, FALSE, basename( dirname(__FILE__) ) . '/languages' );
     }
 
     /*
@@ -181,20 +191,20 @@ if ( !class_exists( 'LVL99_DBS' ) )
     public function activate()
     {
       // Install the options
-      $_plugin_installed = get_option( '_lvl99-dbs/installed', FALSE );
-      $_plugin_version = get_option( '_lvl99-dbs/version', $this->version );
+      $_plugin_installed = get_option( '_' . $this->textdomain . '/installed', FALSE );
+      $_plugin_version = get_option( '_' . $this->textdomain . '/version', $this->version );
       if ( !$_plugin_installed )
       {
         // Set the initial options
         foreach ( $this->default_options as $name => $value )
         {
-          add_option( 'lvl99-dbs/' . $name, $value );
+          add_option( $this->textdomain . '/' . $name, $value );
         }
       }
 
       // Mark that the plugin is now installed
-      update_option( '_lvl99-dbs/installed', TRUE );
-      update_option( '_lvl99-dbs/version', $this->version );
+      update_option( '_' . $this->textdomain . '/installed', TRUE );
+      update_option( '_' . $this->textdomain . '/version', $this->version );
     }
 
     /*
@@ -269,6 +279,9 @@ if ( !class_exists( 'LVL99_DBS' ) )
 
       // Detect (and run) the route
       $this->detect_route();
+
+      // Create log if doesn't exist
+      if ( $this->get_option('show_debug') ) $this->new_log();
     }
 
     /*
@@ -313,7 +326,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
     @description Loads all options into the class
     @returns {Void}
     */
-    public function load_options()
+    public function load_options( $init = TRUE )
     {
       // Default options
       $this->default_options = array(
@@ -325,8 +338,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
           'default' => trailingslashit(WP_CONTENT_DIR) . 'backup-db/',
           'field_type' => 'text',
           'label' => _x('SQL file folder path', 'field label: path', 'lvl99-dbs'),
-          'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>Consider referencing to a folder that exists outside your www/public_html folder</p>
-<p>Tags you can use within the path:</p>', 'field help: file_name', 'lvl99-dbs').'
+          'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>Consider referencing to a folder that exists outside your <code>www/public_html</code> folder</p>', 'field help: file_name', 'lvl99-dbs'),
+          'help_after' => _x('<p>Tags you can use within the path:</p>', 'field help after: file_name', 'lvl99-dbs').'
 <ul><li><code>{ABSPATH}</code> ' . _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)', 'field help: path {ABSPATH} tag', 'lvl99-dbs') . '</li><li><code>{get_home_path}</code> ' . _x('The path to the WordPress\'s installation (references function <code>get_home_path()</code>\'s return value)', 'field help: path {get_home_path} tag', 'lvl99-dbs') . '</li>
 <li><code>{WP_CONTENT_DIR}</code> ' . _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs') . '</li></ul>',
         ),
@@ -339,7 +352,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
           'default' => '{date:YmdHis} {env} {database}.sql',
           'field_type' => 'text',
           'label' => _x('SQL file name format', 'field label: file_name', 'lvl99-dbs'),
-          'help' => '<p>' . _x('Tags you can use within the file name:', 'field help: file_name', 'lvl99-dbs') . '</p>
+          'help_after' => '<p>' . _x('Tags you can use within the file name:', 'field help: file_name', 'lvl99-dbs') . '</p>
 <ul><li><code>{date:<i>...</i>}</code> ' . _x('Replace <code>...</code> with a string representing the date output according to <a href="http://au1.php.net/manual/en/function.date.php" target="_blank">PHP\'s date() function</a>.<br/><b>Note:</b> You cannot use additional semi-colons or curly braces within this tag.', 'field help: file_name {code} tag', 'lvl99-dbs') . '</li>
 <li><code>{env}</code> ' . _x('The environment that the site is running in (references constant <code>WP_ENV</code>)', 'field help: file_name {env} tag', 'lvl99-dbs') . '</li>
 <li><code>{database}</code> ' . _x('The name of the database', 'field help: file_name {database} tag', 'lvl99-dbs').'</li>
@@ -365,13 +378,45 @@ if ( !class_exists( 'LVL99_DBS' ) )
           'field_type' => 'radio',
           'label' => _x('Default file compression format', 'field label: compress_format', 'lvl99-dbs'),
         ),
+
+        /*
+         * Debugging
+         */
+        // Underline hides it from $options array
+        '_debugging' => array(
+          'field_type' => 'heading',
+          'label' => 'Debugging',
+        ),
+
+        /*
+         * Show debug output
+         */
+        'show_debug' => array(
+          'label' => 'Show debug output',
+          'field_type' => 'checkbox',
+          'default' => TRUE,
+          'help_after' => 'If you\'re having some issues or want to debug your server\'s activity, enable this to see what happens during the Database Sync operation.',
+          'sanitise_callback' => array( $this, 'sanitise_option_boolean' ),
+        ),
       );
 
       // Get the saved options
-      foreach ( $this->default_options as $name => $option  )
+      if ( count($this->default_options) > 0 )
       {
-        $this->options[$name] = get_option( $this->textdomain . '/' . $name, $option['default'] );
-        register_setting( $this->textdomain, $this->textdomain . '/' . $name, $option['sanitise_callback'] );
+        foreach ( $this->default_options as $name => $option  )
+        {
+          // Ignore static option types: `heading`
+          if ( $option['field_type'] == 'heading' ) continue;
+
+          // Ensure `sanitise_callback` is NULL
+          if ( !array_key_exists('sanitise_callback', $option) ) $option['sanitise_callback'] = NULL;
+
+          // Get the database's value
+          $this->options[$name] = get_option( $this->textdomain . '/' . $name, $option['default'] );
+
+          // Register the setting to be available to all other plugins (I think?)
+          if ( $init && !is_null($option['sanitise_callback']) ) register_setting( $this->textdomain, $this->textdomain . '/' . $name, $option['sanitise_callback'] );
+        }
       }
     }
 
@@ -712,7 +757,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 
       // Check if its the plugin's settings screen
       $screen = get_current_screen();
-      $is_settings_options = $screen->id == 'settings_page_lvl99-image-import-options';
+      $is_settings_options = $screen->id == 'settings_page_' . $this->textdomain . '-options';
 
       if ( count($options > 0) )
       {
@@ -1303,15 +1348,16 @@ if ( !class_exists( 'LVL99_DBS' ) )
       $return = '
 /*
   WP Database Backup
-  Created with LVL99 Database Sync v'.$this->version.'
+  Created with LVL99 Database Sync v' . $this->version . '
 
-  Site: '.get_bloginfo('name').'
-  Address: '.WP_HOME.'
+  Site: ' . get_bloginfo('name') . '
+  Address: ' . WP_HOME . '
+  Path: ' . ABSPATH . '
 
-  File: '.$file_name.'
-  Created: '.date( 'Y-m-d h:i:s' ).'
+  File: ' . $file_name . '
+  Created: ' . date( 'Y-m-d H:i:s' ) . '
   Tables:
-    -- '.implode("\n    -- ", $tables).'
+    -- ' . implode("\n    -- ", $tables) . '
 */
 
 ';
@@ -1373,10 +1419,12 @@ if ( !class_exists( 'LVL99_DBS' ) )
     @since 0.0.1
     @description Loads an SQL file to update the database with
     @param {String} $file The file name of the file located at the path to load
-    @param {Mixed} $postprocessing {Boolean} false if no post-processing, {Array} with 'search' and 'replace' arrays
+    @param {Mixed} $filters {Boolean} false if no filters, {Array} with 'search' and 'replace' arrays
+    @param {Boolean} $dryrun Whether to apply to the database after finishing or not
+    @param {Boolean} $savetonewfile Saves the filtered SQL to a new file
     @returns {Boolean}
     */
-    public function load_sql_file( $file = FALSE, $postprocessing = FALSE )
+    public function load_sql_file( $file = FALSE, $filters = FALSE, $dryrun = FALSE, $savetonewfile = FALSE )
     {
       global $wpdb;
 
@@ -1398,8 +1446,15 @@ if ( !class_exists( 'LVL99_DBS' ) )
         return FALSE;
       }
 
-      // Enable maintenance mode
-      $this->enable_maintenance();
+      // Enable maintenance mode (only if actually applying to the DB)
+      if ( !$dryrun )
+      {
+        $this->enable_maintenance();
+      }
+      else
+      {
+        $this->log( "Dry run has been selected: the following actions will not be applied to the live database." );
+      }
 
       // Temporary variable, used to store current query
       $templine = '';
@@ -1414,46 +1469,220 @@ if ( !class_exists( 'LVL99_DBS' ) )
         $lines = explode( "\n", $lines );
       }
 
-      // Post-processing
-      if ( is_array($postprocessing) && array_key_exists( 'search', $postprocessing ) && array_key_exists( 'replace', $postprocessing ) )
+      // Filters
+      if ( is_array($filters) && array_key_exists( 'search', $filters ) && array_key_exists( 'replace', $filters ) )
       {
-        $lines = implode( "\n", $lines );
+        // Put into single line for processing
+        // $lines = implode( "\n", $lines );
+
+        // increase time out limit
+        set_time_limit( 60 * 10 );
+
+        // try to push the allowed memory up, while we're at it
+        ini_set( 'memory_limit', '1024M' );
+
+        $this->log( 'Filters detected' );
+        $this->log( $filters );
 
         // @TODO may need to chunk lines to avoid any lengthy timeouts, depending on how big the SQL file is
-        /*
-        echo '<pre>';
-        var_dump( $postprocessing );
-        echo '</pre>';
-        exit();
-        */
-        $lines = preg_replace( $postprocessing['search'], $postprocessing['replace'], $lines );
-        $lines = explode( "\n", $lines );
+        $new_rows = array();
+        $row = '';
+        $table_name = '';
+        $table_col_count = 0;
+        $table_col_re = '';
+
+        // Process all the necessary rows
+        foreach( $lines as $num => $line )
+        {
+          // Row is multi-lined so combine with previous
+          if ( !preg_match( '/;$/', $line ) )
+          {
+            $row .= "\n" . $line;
+            continue;
+          }
+          else
+          {
+            $row .= $line;
+          }
+
+          // Get actual row data
+          $row = trim($row);
+
+          // Match to table spec
+          if ( preg_match( '/^CREATE TABLE ([^\s]+) \(((\s*`([^`]+)` [^\r\n]+)+)/s', $row, $table_matches ) )
+          {
+            if ( count($table_matches) > 0 )
+            {
+              $table_name = $table_matches[1];
+              if ( count($table_matches) > 2 )
+              {
+                $table_col_count = count( explode( ",", $table_matches[2] ) ) - 1;
+                if ( $table_col_count < 0 ) $table_col_count = 0;
+              }
+              else
+              {
+                $table_col_count = 0;
+              }
+            }
+
+            // Generate $table_col_re
+            if ( $table_col_count > 0 )
+            {
+              $table_col_re = '/^';
+              for( $i=0; $i<$table_col_count; $i++ )
+              {
+                $table_col_re .= '"(.*)"' . ($i < ($table_col_count-1) ? ',\s*' : '');
+              }
+              $table_col_re .= '$/s';
+            }
+
+            if ( $table_name == "`blog_posts`" )
+            {
+              $this->log( "Detected table schema for {$table_name} with {$table_col_count} columns at SQL line #{$num}" );
+            }
+
+            $new_rows[] = $row;
+            $row = '';
+            continue;
+          }
+
+          // Check for column values
+          $check_cols = preg_match( '/^INSERT INTO ([^\s]+) VALUES\((.*)\)\;$/s', $row, $row_matches );
+
+          // Don't need to check the column data, so continue on, soldier...
+          if ( !$check_cols )
+          {
+            $this->log( "Skipped search/replace on SQL line #{$num}..." );
+            $this->log( $row );
+            $new_rows[] = $row;
+            $row = '';
+            continue;
+          }
+
+          // Process each column
+          $has_columns = preg_match( $table_col_re, $row_matches[2], $columns );
+          if ( $has_columns && count($columns)-1 == $table_col_count )
+          {
+            $this->log( "Detected row has {$table_col_count} columns for {$table_name} at SQL line #{$num}" );
+
+            // Remove the first entry (matches whole string)
+            array_shift( $columns );
+
+            if ( count($columns) > 0 )
+            {
+              // Process each column
+              foreach ( $columns as $i => $column )
+              {
+                // Attempt to unserialize column data...
+                if ( !$this->is_serialized( stripslashes($column) ) )
+                {
+                  $columns[$i] = preg_replace( $filters['search'], $filters['replace'], $column );
+                  $this->log( "Basic string search/replace performed on column #{$i} at SQL line #{$num}" );
+                  $this->log( $columns[$i] );
+                }
+                else // Serialized data...
+                {
+                  $is_assoc = preg_match( '/^a/', $column );
+                  $data = unserialize( stripslashes($column) );
+
+                  $this->log( "Serialized data found in column #{$i} at SQL line #{$num}:" );
+                  $this->log( $column );
+                  $this->log( $data );
+
+                  $data = json_encode( $data ); // Convert to text JSON to search and replace on
+                  $data = preg_replace( $filters['search'], $filters['replace'], $data );
+                  $data = json_decode( $data, $is_assoc ); // Decode back to PHP array/object
+
+                  // Debug
+                  $this->log( "Performed search/replace on serialized data:" );
+                  $this->log( $data );
+
+                  // Reserialize data
+                  $columns[$i] = addslashes( serialize( $data ) );
+                }
+              }
+
+              // Put the columns back together
+              $row = "INSERT INTO {$table_name} VALUES (\"" . implode( '","', $columns ) . "\");";
+
+              $this->log( "New SQL insert row generated for SQL line #{$num}:" );
+              $this->log( $row );
+            }
+          }
+
+          // Add row to the collection and reset for determining next row
+          $new_rows[] = $row;
+          $row = '';
+        }
+
+        $lines = $new_rows;
       }
 
-      // Loop through each line
-      foreach ($lines as $line)
+      // Apply to database only if it's not a Dry Run
+      if ( !$dryrun )
       {
-        // Skip it if it's a comment
-        if (substr($line, 0, 2) == '--' || $line == '') continue;
-
-        // Add this line to the current segment
-        $templine .= $line;
-
-        // If it has a semicolon at the end, it's the end of the query
-        if ( substr(trim($line), -1, 1) == ';' )
+        // Loop through each line
+        foreach ($lines as $line)
         {
-          // Perform the query
-          // -- Error
-          if ( $wpdb->query( $templine ) === FALSE )
+          // Skip it if it's a comment
+          if (substr($line, 0, 2) == '--' || $line == '') continue;
+
+          // Add this line to the current segment
+          $templine .= $line;
+
+          // If it has a semicolon at the end, it's the end of the query
+          if ( substr(trim($line), -1, 1) == ';' )
           {
-            wp_die( sprintf( __('LVL99 DBS Error: Something when wrong when processing the SQL file (%s)', 'lvl99-dbs'), $wpdb->last_error ) );
-          }
-          else // -- Success
-          {
-            // Reset temp variable to empty
-            $templine = '';
+            // Perform the query
+            // -- Error
+            if ( $wpdb->query( $templine ) === FALSE )
+            {
+              wp_die( sprintf( __('LVL99 DBS Error: Something went wrong when processing the SQL file (%s)', 'lvl99-dbs'), $wpdb->last_error ) );
+            }
+            else // -- Success
+            {
+              // Reset temp variable to empty
+              $templine = '';
+            }
           }
         }
+      }
+
+      // Save to new file (always gzipped)
+      if ( $savetonewfile )
+      {
+        // Set the new file name
+        $fn_info = pathinfo($file_name);
+        $new_file_name = preg_replace( '/ \(filters applied \d+\)/i', '', $fn_info['filename'] ) . ' (filters applied '. date('U') . ').sql.gz';
+        $new_file = $this->get_option_path() . $new_file_name;
+
+        // Add filter information
+        $new_file_contents = '
+/*
+  WP Database Backup
+  Created with LVL99 Database Sync v' . $this->version . '
+
+  File: ' . $new_file_name . '
+  Created: ' . date( 'Y-m-d H:i:s' ) . '
+  Filters applied:
+';
+        foreach( $filters['search'] as $num => $filter )
+        {
+          $new_file_contents .= '
+    -- `' . $filter . '` --> `' . $filters['replace'][$num] . '`'."\n";
+        }
+        $new_file_contents .= '
+*/
+
+';
+        $new_file_contents = implode( "\n", $lines );
+
+        // Write to the new file (gzipped)
+        $nfo = fopen( $new_file, 'wb' );
+        fwrite( $nfo, gzencode( $new_file_contents ) );
+        fclose($nfo);
+
+        $this->log( "Saved filtered SQL to {$new_file_name}" );
       }
 
       // Get time taken
@@ -1461,17 +1690,31 @@ if ( !class_exists( 'LVL99_DBS' ) )
       $time = round($end-$this->start, 2) . ' ' . __('seconds', 'Load SQL process time taken unit seconds', 'lvl99-dbs');
 
       // Success message
-      if ( defined('WP_CACHE') )
+      if ( !$dryrun )
       {
-        $this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s). If you have a caching plugin, it is recommended you flush your database cache now.', 'lvl99-dbs'), $file_name, $time ) );
+        if ( defined('WP_CACHE') )
+        {
+          $this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s). If you have a caching plugin, it is recommended you flush your database cache now.', 'lvl99-dbs'), $file_name, $time ) );
+        }
+        else
+        {
+          $this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s)', 'lvl99-dbs'), $file_name, $time ) );
+        }
       }
       else
       {
-        $this->admin_notice( sprintf( __('Database was successfully restored from <strong><code>%s</code></strong> (time taken: %s)', 'lvl99-dbs'), $file_name, $time ) );
+        if ( $savetonewfile )
+        {
+          $this->admin_notice( sprintf( __('SQL file <strong><code>%s</code></strong> (time taken: %s) has been processed with the "Dry Run" setting and outputted to <strong><code>%s</code></strong>. No changes have been made to your database.', 'lvl99-dbs'), $file_name, $time, $new_file_name ) );
+        }
+        else
+        {
+          $this->admin_notice( sprintf( __('SQL file <strong><code>%s</code></strong> (time taken: %s) has been processed with the "Dry Run" setting. No changes have been made to your database.', 'lvl99-dbs'), $file_name, $time ) );
+        }
       }
 
-      // Disable maintenance
-      $this->disable_maintenance();
+      // Disable maintenance (only if actually applying to the DB)
+      if ( !$dryrun ) $this->disable_maintenance();
 
       return TRUE;
     }
@@ -1605,19 +1848,27 @@ if ( !class_exists( 'LVL99_DBS' ) )
         return;
       }
 
-      // Detect if any post-processing is needed and prepare the object
-      $postprocessing = FALSE;
+      // Dry run?
+      $dryrun = FALSE;
+      if ( isset($this->route['request']['post']['dryrun']) ) $dryrun = TRUE;
+
+      // Save filtered SQL to new file
+      $savetonewfile = FALSE;
+      if ( isset($this->route['request']['post']['savetonewfile']) ) $savetonewfile = TRUE;
+
+      // Detect if any filters are included and to prepare the object
+      $filters = FALSE;
       if ( isset($this->route['request']['post']['filters'])  &&
          !empty($this->route['request']['post']['filters']) )
       {
-        $filters = $this->route['request']['post']['filters'];
-        $_postprocessing = array(
+        $post_filters = $this->route['request']['post']['filters'];
+        $_filters = array(
           'search' => array(),
           'replace' => array(),
         );
 
         // Format the post-processing object
-        foreach( $filters as $id => $filter )
+        foreach( $post_filters as $id => $filter )
         {
           if ( !array_key_exists( 'input', $filter ) || !array_key_exists( 'output', $filter ) )
             continue;
@@ -1625,21 +1876,28 @@ if ( !class_exists( 'LVL99_DBS' ) )
           $input = $this->sanitise_sql($filter['input']);
           $output = $this->sanitise_sql($filter['output']);
 
-          if ( !preg_match('/^\//', $input) ) $input = '/' . $input;
-          if ( !preg_match('/\/[a-zA-Z]*$/', $input) ) $input = $input . '/';
+          // Ensure filters are formatted properly for regex
+          if ( !preg_match( '/^\//', $input ) )
+          {
+            $input = '/' . preg_quote($input, '/') . '/';
+          }
+          // else
+          // {
+          //   $input = stripslashes($input);
+          // }
 
-          $_postprocessing['search'][$id] = $input;
-          $_postprocessing['replace'][$id] = $output;
+          $_filters['search'][] = $input;
+          $_filters['replace'][] = $output;
         }
 
-        if ( count($_postprocessing['search']) > 0 && count($_postprocessing['replace']) > 0 )
-          $postprocessing = $_postprocessing;
+        if ( count($_filters['search']) > 0 && count($_filters['replace']) > 0 )
+          $filters = $_filters;
       }
 
       // Use an existing file hosted on the server
       if ( isset($this->route['request']['post']['file']) && !empty($this->route['request']['post']['file']) )
       {
-        $this->load_sql_file( $this->route['request']['post']['file'], $postprocessing );
+        $this->load_sql_file( $this->route['request']['post']['file'], $filters, $dryrun, $savetonewfile );
       }
 
       // Use an uploaded file
@@ -1667,7 +1925,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
         if ( move_uploaded_file( $upload_path ) )
         {
           admin_notice( sprintf( __('<strong><code>%s</code></strong> was successfully uploaded.', 'lvl99-dbs'), $uploaded_file ) );
-          $this->load_sql_file( $uploaded_file, $postprocessing );
+          $this->load_sql_file( $uploaded_file, $filters, $dryrun, $savetonewfile );
         }
         else
         {
@@ -1805,6 +2063,187 @@ if ( !class_exists( 'LVL99_DBS' ) )
       if ( $input < 1000000 ) return round( $input/1000 ) . 'KB';
       if ( $input < 1000000000 ) return round( ($input/1000)/1000, $decimals ) . 'MB';
       return $input;
+    }
+
+
+    /*
+    Checks if given input string is serialized data or not
+
+    @method is_serialized
+    @param {String} $input
+    @returns {Boolean}
+    */
+    public function is_serialized( $input )
+    {
+      return ( $input == serialize(FALSE) || @unserialize($input) !== FALSE );
+    }
+
+    // See: http://php.net/manual/en/function.unserialize.php#71846
+    // @returns {Boolean}
+    public function wd_check_serialization( $string, &$errmsg )
+    {
+        $str = 's';
+        $array = 'a';
+        $integer = 'i';
+        $any = '[^}]*?';
+        $count = '\d+';
+        $content = '"(?:\\\";|.)*?";';
+        $open_tag = '\{';
+        $close_tag = '\}';
+        $parameter = "($str|$array|$integer|$float|$any):($count)" . "(?:[:]($open_tag|$content)|[;])";
+        $preg = "/$parameter|($close_tag)/";
+        if( !preg_match_all( $preg, $string, $matches ) )
+        {
+            $errmsg = 'not a serialized string';
+            return false;
+        }
+        $open_arrays = 0;
+        foreach( $matches[1] AS $key => $value )
+        {
+            if( !empty( $value ) && ( $value != $array xor $value != $str xor $value != $integer ) )
+            {
+                $errmsg = 'undefined datatype';
+                return false;
+            }
+            if( $value == $array )
+            {
+                $open_arrays++;
+                if( $matches[3][$key] != '{' )
+                {
+                    $errmsg = 'open tag expected';
+                    return false;
+                }
+            }
+            if( $value == '' )
+            {
+                if( $matches[4][$key] != '}' )
+                {
+                    $errmsg = 'close tag expected';
+                    return false;
+                }
+                $open_arrays--;
+            }
+            if( $value == $str )
+            {
+                $aVar = ltrim( $matches[3][$key], '"' );
+                $aVar = rtrim( $aVar, '";' );
+                if( strlen( $aVar ) != $matches[2][$key] )
+                {
+                    $errmsg = 'stringlen for string not match';
+                    return false;
+                }
+            }
+            if( $value == $integer )
+            {
+                if( !empty( $matches[3][$key] ) )
+                {
+                    $errmsg = 'unexpected data';
+                    return false;
+                }
+                if( !is_integer( (int)$matches[2][$key] ) )
+                {
+                    $errmsg = 'integer expected';
+                    return false;
+                }
+            }
+        }
+        if( $open_arrays != 0 )
+        {
+            $errmsg = 'wrong setted arrays';
+            return false;
+        }
+        return true;
+    }
+
+    /*
+    New log
+
+    @method new_log
+    @returns {Void}
+    */
+    private function new_log ()
+    {
+      // Only create if show_debug is enabled
+      if ( $this->get_option('show_debug') )
+      {
+        // Log file
+        if ( !file_exists( $this->log_path( $this->log_file ) ) )
+        {
+          $fo = fopen( $this->log_path( $this->log_file ), 'wb' );
+
+          // Mark logging session
+          // fwrite( $fo, "---------------------------------------------------------------------\n### LVL99 Database Sync progress log started: ". date('Y-m-d H:i:s') ." ###\n---------------------------------------------------------------------\n" );
+
+          fclose($fo);
+        }
+      }
+    }
+
+    /*
+    Log to file
+
+    @method log
+    @param {String} $msg The message to log to the file
+    @returns {Void}
+    */
+    private function log ( $msg )
+    {
+      if ( $this->get_option('show_debug') )
+      {
+        if ( is_array($msg) || is_object($msg) )
+        {
+          $msg = ucwords( gettype($msg) ) . " given:\n" . json_encode( $msg, JSON_PRETTY_PRINT ) . "\n";
+          // @TODO temporarily disabled this to make following progress in window easier
+          // @TODO could have verbose mode?
+          // $msg = "\n" . json_encode( $msg, JSON_PRETTY_PRINT ) . "\n";
+        }
+
+        if ( !is_array($msg) && !is_object($msg) )
+        {
+          $fo = fopen( $this->log_path( $this->log_file ), 'ab' );
+          fwrite( $fo, date('[H:i:s] ') . $msg ."\n" );
+          fclose($fo);
+        }
+      }
+    }
+
+    /*
+    The log file path
+
+    @method log_path
+    @returns {String}
+    */
+    private function log_path ( $file = '' )
+    {
+      return trailingslashit( $this->plugin_dir ) . trailingslashit('logs') . $file;
+    }
+
+    /*
+    The log file URL
+
+    @method log_url
+    @returns {String}
+    */
+    public function log_url ( $file = '' )
+    {
+      return trailingslashit( $this->plugin_url ) . trailingslashit('logs') . $file;
+    }
+
+    /*
+    Display log file contents
+
+    @method log_output
+    @returns {String}
+    */
+    public function log_contents ()
+    {
+      $this->check_admin();
+
+      if ( file_exists( $this->log_path( $this->log_file ) ) )
+      {
+        $file = file_get_contents( $this->log_path( $this->log_file ) );
+        return $file;
+      }
     }
   }
 }

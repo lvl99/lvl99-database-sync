@@ -25,7 +25,8 @@ global $lvl99_dbs;
 
 			<?php settings_fields( 'lvl99-dbs' ); ?>
 			<?php do_settings_sections( 'lvl99-dbs' ); ?>
-			<table class="form-table">
+			<?php $lvl99_dbs->render_options( $lvl99_dbs->default_options, TRUE ); ?>
+			<?php /* <table class="form-table">
 				<?php foreach( $lvl99_dbs->default_options as $name => $option ) : ?>
 				<?php if ( !preg_match( '/^_/', $name ) ) : ?>
 				<?php $option_value = get_option( 'lvl99-dbs/'.$name, $option['default'] ); ?>
@@ -78,7 +79,7 @@ global $lvl99_dbs;
 						<?php else : ?>
 						<li>
 							<label>
-								<input type="radio" name="lvl99-dbs/<?php echo esc_attr($name); ?>" value="<?php echo esc_attr($value); ?>" <?php if ( $option_value == $value ) : ?>checked="checked"<?php endif; ?> />
+								<input type="radio" name="<?php echo $this->textdomain . '/' . esc_attr($name); ?>" value="<?php echo esc_attr($value); ?>" <?php if ( $option_value == $value ) : ?>checked="checked"<?php endif; ?> />
 								<?php echo $value; ?>
 							</label>
 						</li>
@@ -123,6 +124,7 @@ global $lvl99_dbs;
 				<?php endif; ?>
 				<?php endforeach; ?>
 			</table>
+			*/ ?>
 			<?php submit_button(); ?>
 		</form>
 	</div>
