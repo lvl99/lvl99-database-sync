@@ -1476,10 +1476,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
         // $lines = implode( "\n", $lines );
 
         // increase time out limit
-        set_time_limit( 60 * 10 );
+        @set_time_limit( 60 * 10 );
 
         // try to push the allowed memory up, while we're at it
-        ini_set( 'memory_limit', '1024M' );
+        @ini_set( 'memory_limit', '1024M' );
 
         $this->log( 'Filters detected' );
         $this->log( $filters );
@@ -1619,7 +1619,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
           // Process the columns
           if ( count($columns) == $table_col_count )
           {
-            $this->log( "Detected row has {$table_col_count} columns for {$table_name} at SQL line #{$num}" );
+            $this->log( "Detected row has {$table_col_count} columns for `{$table_name}` at SQL line #{$num}" );
 
             // Process each column
             foreach ( $columns as $i => $column )
@@ -1627,8 +1627,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
               // Attempt to unserialize column data...
               if ( !$this->is_serialized( stripslashes($column) ) )
               {
-                $columns[$i] = preg_replace( $filters['search'], $filters['replace'], $column );
-                $this->log( "Basic string search/replace performed on column #{$i} at SQL line #{$num}" );
+                $columns[$i] = str_replace( $filters['search'], $filters['replace'], $column );
+                $this->log( "Basic string search/replace performed on `{$table_name}`.`{$table_cols[$i]}` (column #{$i}) at SQL line #{$num}" );
                 $this->log( $columns[$i] );
                 $stats['plain_data_count']++;
               }
@@ -1637,18 +1637,16 @@ if ( !class_exists( 'LVL99_DBS' ) )
                 $is_assoc = preg_match( '/^a/', $column );
                 $data = unserialize( stripslashes($column) );
 
-                $this->log( "Serialized data found in column #{$i} at SQL line #{$num}:" );
-                // $this->log( $column );
-                // $this->log( $data );
+                $this->log( "Serialized data found in `{$table_name}`.`{$table_cols[$i]}` (column #{$i}) at SQL line #{$num}:" );
+                $this->log( $data );
 
                 // Convert to text JSON to search and replace on
-                $data = json_encode( $data );
-                $data = preg_replace( $filters['search'], $filters['replace'], $data );
+                $data = json_encode( $data, JSON_UNESCAPED_SLASHES );
+                $data = str_replace( $filters['search'], $filters['replace'], $data );
 
                 // Decode back to PHP array/object
                 $data = json_decode( $data, $is_assoc );
 
-                // Debug
                 $this->log( "Performed search/replace on serialized data:" );
                 $this->log( $data );
 
@@ -1787,6 +1785,85 @@ if ( !class_exists( 'LVL99_DBS' ) )
 
       return TRUE;
     }
+
+    /*
+    Test search/replace ordering
+
+    @method search_replace
+    @since 0.1.1
+    @param {Mixed} $search The array/string to search (same accepted for preg_replace)
+    @param {Mixed} $replace The array/string to search (same accepted for preg_replace)
+    @param {Mixed} $subject The object/array to search
+    @returns {Mixed} $output
+    */
+    public function search_replace( $search, $replace, $subject )
+    {
+      // S/R multiple
+      if ( is_array($search) )
+      {
+        $is_array_replace = is_array($replace);
+
+        foreach( $search as $i => $search_term )
+        {
+          if ( $is_array_replace )
+          {
+            $replace_term = array_key_exists( $i, $replace ) ? $replace[$i] : '';
+            $subject = str_replace( $search_term, $replace_term, $subject );
+          }
+          else
+          {
+            $subject = str_replace( $search_term, $replace, $subject );
+          }
+        }
+
+        return $subject;
+      }
+      else
+      {
+        return str_replace( $search, $replace, $subject );
+      }
+    }
+
+    /*
+    Recursively search/replace on an object/array
+
+    @method recursive_search_replace
+    @since 0.1.1
+    @param {Mixed} $search The array/string to search (same accepted for preg_replace)
+    @param {Mixed} $replace The array/string to search (same accepted for preg_replace)
+    @param {Mixed} $subject The object/array to search
+    @returns {Mixed} $subject
+    */
+    // public function recursive_search_replace( $search, $replace, $subject )
+    // {
+    //   // Array or object
+    //   if ( is_array($subject) || is_object($subject) )
+    //   {
+    //     // Iterate through array/object as array
+    //     $is_array = is_array($subject);
+    //     foreach ( $subject as $key => $item )
+    //     {
+    //       // Search and replace
+    //       $val = $this->recursive_search_replace( $search, $replace, $item );
+
+    //       // Set subject's item
+    //       if ( $is_array )
+    //       {
+    //         $subject[$key] = $val;
+    //       }
+    //       else
+    //       {
+    //         $subject->$key = $val;
+    //       }
+    //     }
+
+    //     return $subject;
+    //   }
+    //   else
+    //   {
+    //     return preg_replace( $search, $replace, $subject );
+    //   }
+    // }
 
     /*
     @method download_sql_file
@@ -1939,6 +2016,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
         // Format the post-processing object
         foreach( $post_filters as $id => $filter )
         {
+          // Skip filter if invalid (either no input or output set)
           if ( !array_key_exists( 'input', $filter ) || !array_key_exists( 'output', $filter ) )
             continue;
 
@@ -1946,10 +2024,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
           $output = $this->sanitise_sql($filter['output']);
 
           // Ensure filters are formatted properly for regex
-          if ( !preg_match( '/^\//', $input ) )
-          {
-            $input = '/' . preg_quote($input, '/') . '/';
-          }
+          // if ( !preg_match( '/^\//', $input ) )
+          // {
+          //   $input = '/' . preg_quote($input, '/') . '/';
+          // }
           // else
           // {
           //   $input = stripslashes($input);
@@ -2261,10 +2339,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
       {
         if ( is_array($msg) || is_object($msg) )
         {
-          $msg = ucwords( gettype($msg) ) . " given:\n" . json_encode( $msg, JSON_PRETTY_PRINT ) . "\n";
-          // @TODO temporarily disabled this to make following progress in window easier
-          // @TODO could have verbose mode?
-          // $msg = "\n" . json_encode( $msg, JSON_PRETTY_PRINT ) . "\n";
+          ob_start();
+          var_dump( $msg );
+          $msg = ob_get_contents() . "\n";
+          ob_end_clean();
         }
 
         if ( !is_array($msg) && !is_object($msg) )

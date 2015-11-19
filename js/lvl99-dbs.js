@@ -63,9 +63,15 @@
 
     // Submit form
     $doc.on('submit', '.lvl99-dbs-page form', function (event) {
-      console.log( 'submitted form' );
+      if ( $('input[name=lvl99-dbs_dryrun]:checked').length === 1 && $('.lvl99-dbs-filter-item').length > 0 ) {
+        if ( !confirm('Applying filters with "Dry Run" disabled is not recommended. You may cause irrepairable damage to your database if you haven\'t got a back-up available. Are you REALLY sure you want to continue?') ) {
+          return false;
+        }
+      }
+
+      // Disable buttons and things to avoid re-submitting
       $(this).attr('disabled', 'disabled');
-      $(this).find('button, input[type=submit], input[type=button]').attr('disabled', 'disabled');
+      $(this).find('.button, button, input[type=submit], input[type=button]').attr('disabled', 'disabled');
       $(this).find('.lvl99-dbs-loading').show();
     });
 

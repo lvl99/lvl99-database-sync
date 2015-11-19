@@ -123,8 +123,12 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 						<th scope="row"><?php _ex('Filters', 'field label: filters', 'lvl99-dbs'); ?></th>
 						<td>
 							<div class="lvl99-plugin-option-help">
-								<p>Apply filters to search and replace any text within the loaded SQL file before being applied to the database. This is useful when migrating databases across differing domain names and you need to change domain names and file paths.</p>
+								<p>Apply filters to search and replace any text within the loaded SQL file before being applied to the database. This is useful when migrating databases across differing domains and you need to change domain names and file paths.</p>
+								<?php /*
 								<p class="small">Plain text matches work, and if you're fancy you can also use <a href="http://www.regex101.com" target="_blank">PCRE regular expressions</a>. <b>Note:</b> The order of filters matters.</p>
+								*/ ?>
+								<p class="small">Currently only plain text matches work. <b>Note:</b> The order of filters matters.</p>
+								<p style="color:red">Please note that this feature can potentially break your database. It is recommended that if you wish to apply any filters, that you do it while "<strong>Dry Run</strong>" and "<strong>Save to a new SQL file</strong>" are enabled. This way you can check and see if anything has errored during the process, and that after you can load the SQL file into a different database to verify that everything works OK before applying it to your live database.</p>
 							</div>
 
 							<div class="lvl99-dbs-filters lvl99-sortable">
@@ -153,6 +157,7 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 							<p><a href="#add-filter" class="button button-secondary"><?php echo __( 'Add Filter', $textdomain ); ?></a></p>
 
 							<div class="lvl99-plugin-option-help" style="margin-top: 2em">
+								<p><strong>Some helpful strings to potentially search/replace:</strong></p>
 								<dl>
 									<dt>ABSPATH</dt>
 									<dd><code><?php echo ABSPATH; ?></code></dd>
