@@ -200,3 +200,21 @@
   padding-top: 1em;
   padding-left: 1em;
 }
+.lvl99-dbs-loading {
+  font-style: italic;
+  color: #666;
+}
+.lvl99-dbs-loading-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  vertical-align: middle;
+  background: transparent url('../media/loading-spinner-24x24.gif') no-repeat center center;
+}
+form[disabled] button,
+form[disabled] .button,
+form[disabled] input[type=button],
+form[disabled] input[type=submit] {
+  opacity: 0.5;
+}

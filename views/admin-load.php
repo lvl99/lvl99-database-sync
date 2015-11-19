@@ -17,6 +17,9 @@ if ( !empty($lvl99_image_import->route['request']) )
   $posted = $lvl99_image_import->route['request']['post'];
 }
 
+// Uplaods dir
+$uploads_dir = wp_upload_dir();
+
 // Filters
 $filters = isset($posted['filters']) ? $posted['filters'] : array();
 ?>
@@ -157,6 +160,10 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 									<dd><code><?php echo WP_HOME; ?></code></dd>
 									<dt>WP_SITEURL</dt>
 									<dd><code><?php echo WP_SITEURL; ?></code></dd>
+									<dt>Uploads URL:</dt>
+									<dd><code><?php echo $uploads_dir['baseurl']; ?></code></dd>
+									<dt>Uploads path:</dt>
+									<dd><code><?php echo $uploads_dir['basedir']; ?></code></dd>
 								</dl>
 							</div>
 						</div>
@@ -177,7 +184,7 @@ $filters = isset($posted['filters']) ? $posted['filters'] : array();
 					<tr>
 						<th scope="row">&nbsp;</th>
 						<td>
-							<input type="submit" name="lvl99-dbs_submit" value="<?php _ex('Load and process SQL file', 'Load SQL page button submit label', 'lvl99-dbs'); ?>" class="button button-primary" />
+							<input type="submit" name="lvl99-dbs_submit" value="<?php _ex('Load and process SQL file', 'Load SQL page button submit label', 'lvl99-dbs'); ?>" class="button button-primary" /> <span class="lvl99-dbs-loading" style="display:none"><span class="lvl99-dbs-loading-spinner"></span> Operation is currently under way. Depending on the size of the SQL file this may take a few minutes...</span>
 						</td>
 					</tr>
 				</tbody>

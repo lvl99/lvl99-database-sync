@@ -50,6 +50,7 @@
 
     // Remove filter
     $doc.on( 'click', 'a[href=#remove-filter]', function (event) {
+      event.preventDefault();
       var $filter = $(this).parents('.lvl99-dbs-filter-item');
       $filter.remove();
     });
@@ -58,6 +59,14 @@
     $('.lvl99-sortable').sortable({
       items: '.lvl99-dbs-filter-item',
       handle: '.lvl99-sortable-handle'
+    });
+
+    // Submit form
+    $doc.on('submit', '.lvl99-dbs-page form', function (event) {
+      console.log( 'submitted form' );
+      $(this).attr('disabled', 'disabled');
+      $(this).find('button, input[type=submit], input[type=button]').attr('disabled', 'disabled');
+      $(this).find('.lvl99-dbs-loading').show();
     });
 
   });

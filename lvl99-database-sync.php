@@ -1488,131 +1488,195 @@ if ( !class_exists( 'LVL99_DBS' ) )
         $new_rows = array();
         $row = '';
         $table_name = '';
+        $table_cols = array();
         $table_col_count = 0;
-        $table_col_re = '';
+
+        // Stats
+        $stats = array(
+          'line_count' => 0,
+          'lines_processed' => 0,
+          'row_count' => 0,
+          'rows_skipped' => 0,
+          'rows_processed' => 0,
+          'tables_count' => 0,
+          'inserts_count' => 0,
+          'plain_data_count' => 0,
+          'serialized_data_count' => 0,
+          'valid_queries' => 0,
+          'errors_count' => array(
+            'table_col_zero' => 0,
+            'no_column_parse' => 0,
+            'incorrect_column_count' => 0,
+            'invalid_queries' => 0,
+          ),
+        );
 
         // Process all the necessary rows
         foreach( $lines as $num => $line )
         {
-          // Row is multi-lined so combine with previous
+          $stats['line_count']++;
+
+          // Condense lines into single SQL queries (or rows)
+          $row .= "\n" . $line;
           if ( !preg_match( '/;$/', $line ) )
           {
-            $row .= "\n" . $line;
+            // Row is multi-lined so combine with previous (i.e. move on to the next line)
             continue;
           }
-          else
-          {
-            $row .= $line;
-          }
 
-          // Get actual row data
-          $row = trim($row);
+          $stats['lines_processed']++;
+
+          // Remove any whitespace at start
+          $row = ltrim($row);
 
           // Match to table spec
-          if ( preg_match( '/^CREATE TABLE ([^\s]+) \(((\s*`([^`]+)` [^\r\n]+)+)/s', $row, $table_matches ) )
+          if ( preg_match( '/^CREATE TABLE ([^\s]+) \(((?:\s*`[^`]+` [^\r\n]+)+)/s', $row, $table_matches ) )
           {
+            $table_name = 'unidentified_table_name';
+
             if ( count($table_matches) > 0 )
             {
-              $table_name = $table_matches[1];
+              // Save reference to table name
+              $table_name = preg_replace( "/[`'\"]+/", '', $table_matches[1] );
+
+              // Process columns
+              $table_cols = array();
               if ( count($table_matches) > 2 )
               {
-                $table_col_count = count( explode( ",", $table_matches[2] ) ) - 1;
-                if ( $table_col_count < 0 ) $table_col_count = 0;
+                $table_col_specs = preg_split( "/,\s+/", trim($table_matches[2]) );
+
+                // Save references to columns names
+                foreach( $table_col_specs as $i => $col )
+                {
+                  if ( preg_match( '/^[`\'"]?([^`\'"]+)[`\'"]?\s/', $col, $table_col_name ) )
+                  {
+                    $table_cols[$i] = $table_col_name[1];
+                  }
+                }
+                $table_col_count = count($table_cols);
               }
               else
               {
+                $stats['errors_count']['table_col_zero']++;
                 $table_col_count = 0;
               }
-            }
 
-            // Generate $table_col_re
-            if ( $table_col_count > 0 )
-            {
-              $table_col_re = '/^';
-              for( $i=0; $i<$table_col_count; $i++ )
-              {
-                $table_col_re .= '"(.*)"' . ($i < ($table_col_count-1) ? ',\s*' : '');
-              }
-              $table_col_re .= '$/s';
-            }
-
-            if ( $table_name == "`blog_posts`" )
-            {
               $this->log( "Detected table schema for {$table_name} with {$table_col_count} columns at SQL line #{$num}" );
+              $this->log( $row );
+
+              $stats['tables_count']++;
+              $stats['rows_processed']++;
             }
 
             $new_rows[] = $row;
             $row = '';
+            $stats['row_count']++;
             continue;
           }
 
           // Check for column values
-          $check_cols = preg_match( '/^INSERT INTO ([^\s]+) VALUES\((.*)\)\;$/s', $row, $row_matches );
+          $check_cols = preg_match( '/^INSERT INTO ([^\s]+) VALUES\((.*)\)\;/s', $row, $row_matches );
 
           // Don't need to check the column data, so continue on, soldier...
           if ( !$check_cols )
           {
             $this->log( "Skipped search/replace on SQL line #{$num}..." );
             $this->log( $row );
+            $stats['rows_skipped']++;
             $new_rows[] = $row;
             $row = '';
+            $stats['row_count']++;
             continue;
           }
 
+          $stats['inserts_count']++;
+
           // Process each column
-          $has_columns = preg_match( $table_col_re, $row_matches[2], $columns );
-          if ( $has_columns && count($columns)-1 == $table_col_count )
+          $columns = array();
+          $has_columns = preg_match( "/(?:(?:,|^)(?<!\\\\)\".*?(?<!\\\\)\"(?:(?=,)|$)){" . $table_col_count . "}/s", $row_matches[2] );
+          preg_match_all( "/(?:,|^)(?<!\\\\)\"(.*?)(?<!\\\\)\"(?:(?=,)|$)/s", $row_matches[2], $columns );
+          $this->log( 'has_columns=' . ($has_columns ? 'yes' : 'no') . ' expected_columns='.$table_col_count );
+
+          // Prep $columns for further processing
+          if ( $has_columns )
+          {
+            // Relies on single capturing group in above preg_match_all regexp
+            if ( !empty($columns) && count($columns) == 2 ) $columns = $columns[1];
+          }
+          else
+          {
+            $this->log( "Skipped search/replace on SQL line #{$num}: Couldn't detect table columns to filter" );
+            $this->log( $row );
+            $stats['errors_count']['no_column_parse']++;
+            $stats['rows_skipped']++;
+
+            $new_rows[] = $row;
+            $row = '';
+            $stats['row_count']++;
+            continue;
+          }
+
+          // Process the columns
+          if ( count($columns) == $table_col_count )
           {
             $this->log( "Detected row has {$table_col_count} columns for {$table_name} at SQL line #{$num}" );
 
-            // Remove the first entry (matches whole string)
-            array_shift( $columns );
-
-            if ( count($columns) > 0 )
+            // Process each column
+            foreach ( $columns as $i => $column )
             {
-              // Process each column
-              foreach ( $columns as $i => $column )
+              // Attempt to unserialize column data...
+              if ( !$this->is_serialized( stripslashes($column) ) )
               {
-                // Attempt to unserialize column data...
-                if ( !$this->is_serialized( stripslashes($column) ) )
-                {
-                  $columns[$i] = preg_replace( $filters['search'], $filters['replace'], $column );
-                  $this->log( "Basic string search/replace performed on column #{$i} at SQL line #{$num}" );
-                  $this->log( $columns[$i] );
-                }
-                else // Serialized data...
-                {
-                  $is_assoc = preg_match( '/^a/', $column );
-                  $data = unserialize( stripslashes($column) );
-
-                  $this->log( "Serialized data found in column #{$i} at SQL line #{$num}:" );
-                  $this->log( $column );
-                  $this->log( $data );
-
-                  $data = json_encode( $data ); // Convert to text JSON to search and replace on
-                  $data = preg_replace( $filters['search'], $filters['replace'], $data );
-                  $data = json_decode( $data, $is_assoc ); // Decode back to PHP array/object
-
-                  // Debug
-                  $this->log( "Performed search/replace on serialized data:" );
-                  $this->log( $data );
-
-                  // Reserialize data
-                  $columns[$i] = addslashes( serialize( $data ) );
-                }
+                $columns[$i] = preg_replace( $filters['search'], $filters['replace'], $column );
+                $this->log( "Basic string search/replace performed on column #{$i} at SQL line #{$num}" );
+                $this->log( $columns[$i] );
+                $stats['plain_data_count']++;
               }
+              else // Serialized data...
+              {
+                $is_assoc = preg_match( '/^a/', $column );
+                $data = unserialize( stripslashes($column) );
 
-              // Put the columns back together
-              $row = "INSERT INTO {$table_name} VALUES (\"" . implode( '","', $columns ) . "\");";
+                $this->log( "Serialized data found in column #{$i} at SQL line #{$num}:" );
+                // $this->log( $column );
+                // $this->log( $data );
 
-              $this->log( "New SQL insert row generated for SQL line #{$num}:" );
-              $this->log( $row );
+                // Convert to text JSON to search and replace on
+                $data = json_encode( $data );
+                $data = preg_replace( $filters['search'], $filters['replace'], $data );
+
+                // Decode back to PHP array/object
+                $data = json_decode( $data, $is_assoc );
+
+                // Debug
+                $this->log( "Performed search/replace on serialized data:" );
+                $this->log( $data );
+
+                // Reserialize data
+                $columns[$i] = addslashes( serialize($data) );
+                $stats['serialized_data_count']++;
+              }
             }
+
+            // Put the columns back together
+            $row = "INSERT INTO {$table_name} VALUES (\"" . implode( '","', $columns ) . "\");";
+
+            $this->log( "New SQL insert row generated for SQL line #{$num}:" );
+            $this->log( $row );
+            $stats['rows_processed']++;
+          }
+          else
+          {
+            $this->log( "Skipped search/replace on SQL line #{$num}: Columns detected doesn't match table schema (table_col_count={$table_col_count}, columns_count=".count($columns).")" );
+            $this->log( $row );
+            $stats['rows_skipped']++;
+            $stats['errors_count']['incorrect_column_count']++;
           }
 
           // Add row to the collection and reset for determining next row
           $new_rows[] = $row;
           $row = '';
+          $stats['row_count']++;
         }
 
         $lines = $new_rows;
@@ -1637,12 +1701,14 @@ if ( !class_exists( 'LVL99_DBS' ) )
             // -- Error
             if ( $wpdb->query( $templine ) === FALSE )
             {
+              $stats['errors_count']['invalid_queries']++;
               wp_die( sprintf( __('LVL99 DBS Error: Something went wrong when processing the SQL file (%s)', 'lvl99-dbs'), $wpdb->last_error ) );
             }
             else // -- Success
             {
               // Reset temp variable to empty
               $templine = '';
+              $stats['valid_queries']++;
             }
           }
         }
@@ -1668,14 +1734,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
 ';
         foreach( $filters['search'] as $num => $filter )
         {
-          $new_file_contents .= '
-    -- `' . $filter . '` --> `' . $filters['replace'][$num] . '`'."\n";
+          $new_file_contents .= '    -- `' . $filter . '` --> `' . $filters['replace'][$num] . '`'."\n";
         }
         $new_file_contents .= '
 */
 
 ';
-        $new_file_contents = implode( "\n", $lines );
+        $new_file_contents .= implode( "\n", $lines );
 
         // Write to the new file (gzipped)
         $nfo = fopen( $new_file, 'wb' );
@@ -1688,6 +1753,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
       // Get time taken
       $end = microtime( TRUE );
       $time = round($end-$this->start, 2) . ' ' . __('seconds', 'Load SQL process time taken unit seconds', 'lvl99-dbs');
+
+      // Stats
+      $this->log( "Operation competed and took " . $time );
+      $this->log( $stats );
 
       // Success message
       if ( !$dryrun )
@@ -2244,6 +2313,21 @@ if ( !class_exists( 'LVL99_DBS' ) )
         $file = file_get_contents( $this->log_path( $this->log_file ) );
         return $file;
       }
+    }
+
+
+    public function preg_errtxt($errcode)
+    {
+        static $errtext;
+
+        if (!isset($errtxt))
+        {
+            $errtext = array();
+            $constants = get_defined_constants(true);
+            foreach ($constants['pcre'] as $c => $n) if (preg_match('/_ERROR$/', $c)) $errtext[$n] = $c;
+        }
+
+        return array_key_exists($errcode, $errtext)? $errtext[$errcode] : NULL;
     }
   }
 }
