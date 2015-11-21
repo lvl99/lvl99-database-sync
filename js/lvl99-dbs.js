@@ -63,7 +63,7 @@
 
     // Submit form
     $doc.on('submit', '.lvl99-dbs-page form', function (event) {
-      if ( $('input[name=lvl99-dbs_dryrun]:checked').length === 1 && $('.lvl99-dbs-filter-item').length > 0 ) {
+      if ( $('input[name=lvl99-dbs_dryrun]:checked').length === 0 && $('.lvl99-dbs-filter-item').length > 0 ) {
         if ( !confirm('Applying filters with "Dry Run" disabled is not recommended. You may cause irrepairable damage to your database if you haven\'t got a back-up available. Are you REALLY sure you want to continue?') ) {
           return false;
         }

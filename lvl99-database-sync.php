@@ -342,6 +342,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
           'help_after' => _x('<p>Tags you can use within the path:</p>', 'field help after: file_name', 'lvl99-dbs').'
 <ul><li><code>{ABSPATH}</code> ' . _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)', 'field help: path {ABSPATH} tag', 'lvl99-dbs') . '</li><li><code>{get_home_path}</code> ' . _x('The path to the WordPress\'s installation (references function <code>get_home_path()</code>\'s return value)', 'field help: path {get_home_path} tag', 'lvl99-dbs') . '</li>
 <li><code>{WP_CONTENT_DIR}</code> ' . _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs') . '</li></ul>',
+          // 'show_previous_value' => TRUE,
         ),
 
         /*
@@ -983,6 +984,12 @@ if ( !class_exists( 'LVL99_DBS' ) )
               <?php echo $option['input_after']; ?>
             </span>
             <?php endif; ?>
+
+            <?php /* if ( isset($option['show_previous_value']) ) : ?>
+            <div class="lvl99-plugin-option-previous-value">
+              <p>Previous value: <code><?php echo $this->get_option($name); ?></code></p>
+            </div>
+            <?php endif; */ ?>
 
             <?php if ( isset($option['help_after']) ) : ?>
             <div class="lvl99-plugin-option-help lvl99-plugin-option-help-after">
