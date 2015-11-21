@@ -310,9 +310,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
     }
 
     /*
+    Gets the text domain string
+
     @method get_textdomain
     @since 0.1.0
-    @description Gets the text domain string
     @returns {String}
     */
     public function get_textdomain()
@@ -321,9 +322,10 @@ if ( !class_exists( 'LVL99_DBS' ) )
     }
 
     /*
+    Loads all options into the class and registers them in WordPress
+
     @method load_options
     @since 0.0.1
-    @description Loads all options into the class
     @returns {Void}
     */
     public function load_options( $init = TRUE )
@@ -334,11 +336,11 @@ if ( !class_exists( 'LVL99_DBS' ) )
          * Path to save/load SQL files to
          */
         'path' => array(
-          'sanitise_callback' => NULL,
-          'default' => trailingslashit(WP_CONTENT_DIR) . 'backup-db/',
+          'sanitise_callback' => array( $this, 'sanitise_option_path' ),
+          'default' => '{WP_CONTENT_DIR}/backup-db/',
           'field_type' => 'text',
           'label' => _x('SQL file folder path', 'field label: path', 'lvl99-dbs'),
-          'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>Consider referencing to a folder that exists outside your <code>www/public_html</code> folder</p>', 'field help: file_name', 'lvl99-dbs'),
+          'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>For security purposes, consider referencing to a folder that exists above your <code>www/public_html</code> folder</p>', 'field help: file_name', 'lvl99-dbs'),
           'help_after' => _x('<p>Tags you can use within the path:</p>', 'field help after: file_name', 'lvl99-dbs').'
 <ul><li><code>{ABSPATH}</code> ' . _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)', 'field help: path {ABSPATH} tag', 'lvl99-dbs') . '</li><li><code>{get_home_path}</code> ' . _x('The path to the WordPress\'s installation (references function <code>get_home_path()</code>\'s return value)', 'field help: path {get_home_path} tag', 'lvl99-dbs') . '</li>
 <li><code>{WP_CONTENT_DIR}</code> ' . _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs') . '</li></ul>',
@@ -350,7 +352,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
          */
         'file_name' => array(
           'sanitise_callback' => array( $this, 'sanitise_option_file_name' ),
-          'default' => '{date:YmdHis} {env} {database}.sql',
+          'default' => '{date:YmdHis} {env} {url} {database}.sql',
           'field_type' => 'text',
           'label' => _x('SQL file name format', 'field label: file_name', 'lvl99-dbs'),
           'help_after' => '<p>' . _x('Tags you can use within the file name:', 'field help: file_name', 'lvl99-dbs') . '</p>
@@ -409,14 +411,24 @@ if ( !class_exists( 'LVL99_DBS' ) )
           // Ignore static option types: `heading`
           if ( $option['field_type'] == 'heading' ) continue;
 
-          // Ensure `sanitise_callback` is NULL
+          // Ensure `sanitise_callback` is NULL if empty
           if ( !array_key_exists('sanitise_callback', $option) ) $option['sanitise_callback'] = NULL;
 
           // Get the database's value
           $this->options[$name] = get_option( $this->textdomain . '/' . $name, $option['default'] );
 
           // Register the setting to be available to all other plugins (I think?)
-          if ( $init && !is_null($option['sanitise_callback']) ) register_setting( $this->textdomain, $this->textdomain . '/' . $name, $option['sanitise_callback'] );
+          if ( $init )
+          {
+            if ( !is_null($option['sanitise_callback']) )
+            {
+              register_setting( $this->textdomain, $this->textdomain . '/' . $name, $option['sanitise_callback'] );
+            }
+            else
+            {
+              register_setting( $this->textdomain, $this->textdomain . '/' . $name );
+            }
+          }
         }
       }
     }
@@ -453,18 +465,23 @@ if ( !class_exists( 'LVL99_DBS' ) )
     }
 
     /*
+    Filters the {tags} in the path option
+
     @method get_option_path
     @since 0.0.2
-    @description Filters the tags in the path option
+    @param {String} $path The string to test as a path; defaults to `$this->get_option('path')`
     @returns {String}
     */
-    public function get_option_path()
+    public function get_option_path( $path = '' )
     {
-      $path = $this->replace_tags( $this->get_option('path'), array(
+      if ( empty($path) ) $path = $this->get_option('path');
+
+      $path = $this->replace_tags( $path, array(
         'ABSPATH' => trailingslashit(ABSPATH),
         'get_home_path' => trailingslashit(get_home_path()),
         'WP_CONTENT_DIR' => trailingslashit(WP_CONTENT_DIR),
       ) );
+
       // Remove duplicate slashes
       $path = preg_replace( '/[\/\\\\]+/', trailingslashit(''), $path );
       return trailingslashit($path);
@@ -616,24 +633,26 @@ if ( !class_exists( 'LVL99_DBS' ) )
     }
 
     /*
-    Sanitise the maximgthumbnail option's value
+    Sanitises the option value set for 'lvl99-dbs/path'
 
-    @method sanitise_option_maximgthumbnail
-    @since 0.1.0
-    @param {String} $input
-    @returns {Integer}
+    @method sanitise_option_path
+    @since 0.1.1
+    @param {String} $input The new value to sanitise
+    @returns {String}
     */
-    public static function sanitise_option_maximgthumbnail ( $input )
+    public function sanitise_option_path( $input )
     {
-      global $_wp_additional_image_sizes;
+      // Format to test folder exists
+      $test = $this->get_option_path($input);
 
-      // Input is valid
-      if ( array_key_exists($input, $_wp_additional_image_sizes) )
+      // Folder doesn't exist
+      if ( !file_exists($test) )
       {
-        return $input;
-      } else {
-        return 'large';
+        $this->admin_error( sprintf( _x('Given SQL path value not found at <code>%s</code>. Please ensure the folder exists before changing this value.', 'sanitise option path error', 'lvl99-dbs'), $test ) );
+        return FALSE;
       }
+
+      return $input;
     }
 
     /*

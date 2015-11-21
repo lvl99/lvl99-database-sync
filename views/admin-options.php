@@ -25,7 +25,7 @@ global $lvl99_dbs;
 
 			<?php settings_fields( 'lvl99-dbs' ); ?>
 			<?php do_settings_sections( 'lvl99-dbs' ); ?>
-			<?php $lvl99_dbs->render_options( $lvl99_dbs->default_options, TRUE ); ?>
+			<?php $lvl99_dbs->render_options( $lvl99_dbs->default_options ); ?>
 			<?php /* <table class="form-table">
 				<?php foreach( $lvl99_dbs->default_options as $name => $option ) : ?>
 				<?php if ( !preg_match( '/^_/', $name ) ) : ?>
