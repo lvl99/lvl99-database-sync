@@ -40,6 +40,9 @@ if ( !function_exists('gzdecode') )
   }
 }
 
+// Environment variable
+if ( !defined('WP_ENV') ) define( 'WP_ENV', 'live' );
+
 if ( !class_exists( 'LVL99_DBS' ) )
 {
   /*
@@ -342,8 +345,8 @@ if ( !class_exists( 'LVL99_DBS' ) )
           'label' => _x('SQL file folder path', 'field label: path', 'lvl99-dbs'),
           'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>For security purposes, consider referencing to a folder that exists above your <code>www/public_html</code> folder</p>', 'field help: file_name', 'lvl99-dbs'),
           'help_after' => _x('<p>Tags you can use within the path:</p>', 'field help after: file_name', 'lvl99-dbs').'
-<ul><li><code>{ABSPATH}</code> ' . _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)', 'field help: path {ABSPATH} tag', 'lvl99-dbs') . '</li><li><code>{get_home_path}</code> ' . _x('The path to the WordPress\'s installation (references function <code>get_home_path()</code>\'s return value)', 'field help: path {get_home_path} tag', 'lvl99-dbs') . '</li>
-<li><code>{WP_CONTENT_DIR}</code> ' . _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs') . '</li></ul>',
+<ul><li><code>{ABSPATH}</code> ' . sprintf( _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)<br/>Current: <code>%s</code>', 'field help: path {ABSPATH} tag', 'lvl99-dbs'), ABSPATH) . '</li><li><code>{get_home_path}</code> ' . sprintf( _x('The path to the WordPress\'s installation (references function <code>get_home_path()</code>\'s return value)<br/>Current: <code>%s</code>', 'field help: path {get_home_path} tag', 'lvl99-dbs'), get_home_path() ) . '</li>
+<li><code>{WP_CONTENT_DIR}</code> ' . sprintf( _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)<br/>Current: <code>%s</code>', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs'), WP_CONTENT_DIR ) . '</li></ul>',
           // 'show_previous_value' => TRUE,
         ),
 
@@ -359,7 +362,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 <ul><li><code>{date:<i>...</i>}</code> ' . _x('Replace <code>...</code> with a string representing the date output according to <a href="http://au1.php.net/manual/en/function.date.php" target="_blank">PHP\'s date() function</a>.<br/><b>Note:</b> You cannot use additional semi-colons or curly braces within this tag.', 'field help: file_name {code} tag', 'lvl99-dbs') . '</li>
 <li><code>{env}</code> ' . _x('The environment that the site is running in (references constant <code>WP_ENV</code>)', 'field help: file_name {env} tag', 'lvl99-dbs') . '</li>
 <li><code>{database}</code> ' . _x('The name of the database', 'field help: file_name {database} tag', 'lvl99-dbs').'</li>
-<li><code>{url}</code> ' . _x('The URL of the website (references constant <code>WP_HOME</code>)', 'field help: file_name {url} tag', 'lvl99-dbs') . '</li></ul>',
+<li><code>{url}</code> ' . _x('The URL of the website (references constant <code>home_url()</code> function)', 'field help: file_name {url} tag', 'lvl99-dbs') . '</li></ul>',
         ),
 
         /*
@@ -609,9 +612,9 @@ if ( !class_exists( 'LVL99_DBS' ) )
       // ChromePhp::log( 'sanitise_option_url' );
       // ChromePhp::log( $input );
 
-      if ( stristr($input, WP_HOME) !== FALSE )
+      if ( stristr($input, home_url('/')) !== FALSE )
       {
-        $input = str_replace(WP_HOME, '', $input);
+        $input = str_replace(home_url('/'), '', $input);
       }
 
       return strip_tags(trim($input));
@@ -1325,7 +1328,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
 
       // Replace tags
       $output_file_name = $this->replace_tags( $file_name, array(
-        'url' => untrailingslashit( preg_replace('/[a-z]+\:\/\//', '', WP_HOME ) ),
+        'url' => untrailingslashit( preg_replace('/[a-z]+\:\/\//', '', home_url('/') ) ),
         'env' => defined('WP_ENV') ? WP_ENV : '',
         'database' => DB_NAME,
       ) );
@@ -1377,7 +1380,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
   Created with LVL99 Database Sync v' . $this->version . '
 
   Site: ' . get_bloginfo('name') . '
-  Address: ' . WP_HOME . '
+  Address: ' . home_url('/') . '
   Path: ' . ABSPATH . '
 
   File: ' . $file_name . '
