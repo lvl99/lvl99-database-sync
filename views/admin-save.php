@@ -13,10 +13,10 @@ global $lvl99_dbs;
 	<h2><?php _e('Database Sync', 'lvl99-dbs'); ?></h2>
 
 	<h2 class="nav-tab-wrapper">
-		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=save" class="nav-tab nav-tab-active"><?php _ex('Save', 'Save SQL page tab', 'lvl99-dbs'); ?></a>
-		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=load" class="nav-tab"><?php _ex('Load', 'Load SQL page tab', 'lvl99-dbs'); ?></a>
-		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/options-general.php?page=lvl99-dbs-options" class="nav-tab"><?php _ex('Options', 'Options page tab', 'lvl99-dbs'); ?></a>
-		<a href="<?php echo trailingslashit(WP_SITEURL); ?>wp-admin/tools.php?page=lvl99-dbs&action=help" class="nav-tab"><?php _ex('Help', 'Help page tab', 'lvl99-dbs'); ?></a>
+		<a href="<?php echo site_url('/wp-admin/tools.php?page=lvl99-dbs&action=save'); ?>" class="nav-tab nav-tab-active"><?php _ex('Save', 'Save SQL page tab', 'lvl99-dbs'); ?></a>
+		<a href="<?php echo site_url('/wp-admin/tools.php?page=lvl99-dbs&action=load'); ?>" class="nav-tab"><?php _ex('Load', 'Load SQL page tab', 'lvl99-dbs'); ?></a>
+		<a href="<?php echo site_url('/wp-admin/options-general.php?page=lvl99-dbs-options'); ?>" class="nav-tab"><?php _ex('Options', 'Options page tab', 'lvl99-dbs'); ?></a>
+		<a href="<?php echo site_url('/wp-admin/tools.php?page=lvl99-dbs&action=help'); ?>" class="nav-tab"><?php _ex('Help', 'Help page tab', 'lvl99-dbs'); ?></a>
 	</h2>
 
 	<div class="lvl99-dbs-page">
