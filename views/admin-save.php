@@ -7,6 +7,12 @@
 if ( !defined('ABSPATH') || !defined('WP_LVL99_DBS') ) exit('No direct access allowed');
 
 global $lvl99_dbs;
+
+// Shared options to render on the Save page
+$save_options = array(
+	'file_name' => $lvl99_dbs->default_options['file_name'],
+	'compress_format' => $lvl99_dbs->default_options['compress_format'],
+);
 ?>
 
 <div class="wrap">
@@ -46,12 +52,19 @@ global $lvl99_dbs;
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php echo $lvl99_dbs->default_options['file_name']['label']; ?></th>
+						<td colspan="2">
+							<?php $lvl99_dbs->render_options( $save_options ); ?>
+
+							<input type="submit" name="lvl99-dbs_submit" value="<?php _ex('Save SQL file', 'Save SQL page button-submit label', 'lvl99-dbs'); ?>" class="button button-primary" />
+						</td>
+						<?php /*<th scope="row"><?php echo $lvl99_dbs->default_options['file_name']['label']; ?></th>
 						<td>
 							<input type="text" name="lvl99-dbs_file_name" value="<?php echo $lvl99_dbs->get_option('file_name'); ?>" class="widefat" />
+							<?php if ( isset($lvl99_dbs->default_options['file_name']['help_after']) ) : ?>
 							<div class="lvl99-dbs-option-help">
-								<?php echo $lvl99_dbs->default_options['file_name']['help']; ?>
+								<?php echo $lvl99_dbs->default_options['file_name']['help_after']; ?>
 							</div>
+							<?php endif; ?>
 						</td>
 					</tr>
 					<tr>
@@ -66,7 +79,7 @@ global $lvl99_dbs;
 					</tr>
 					<tr>
 						<th scope="row">&nbsp;</th>
-						<td><input type="submit" name="lvl99-dbs_submit" value="<?php _ex('Save SQL file', 'Save SQL page button-submit label', 'lvl99-dbs'); ?>" class="button button-primary" /></td>
+						<td><input type="submit" name="lvl99-dbs_submit" value="<?php _ex('Save SQL file', 'Save SQL page button-submit label', 'lvl99-dbs'); ?>" class="button button-primary" /></td>*/ ?>
 					</tr>
 				</tbody>
 			</table>

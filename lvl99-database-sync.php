@@ -325,6 +325,28 @@ if ( !class_exists( 'LVL99_DBS' ) )
     }
 
     /*
+    Determines the content directory
+
+    @method content_dir
+    @since 0.1.1
+    @param {String} $path
+    @returns {String}
+    */
+    public function content_dir( $path = '' )
+    {
+      // Default content directory
+      $content_dir = get_home_path('/wp-content');
+
+      // Custom WP_CONTENT_DIR is defined
+      if ( defined('WP_CONTENT_DIR') )
+      {
+        $content_dir = WP_CONTENT_DIR;
+      }
+
+      return trailingslashit($content_dir) . preg_replace( '/^\//', '', $path );
+    }
+
+    /*
     Loads all options into the class and registers them in WordPress
 
     @method load_options
@@ -340,13 +362,13 @@ if ( !class_exists( 'LVL99_DBS' ) )
          */
         'path' => array(
           'sanitise_callback' => array( $this, 'sanitise_option_path' ),
-          'default' => '{WP_CONTENT_DIR}/backup-db/',
+          'default' => '{content_dir}/backup-db/',
           'field_type' => 'text',
           'label' => _x('SQL file folder path', 'field label: path', 'lvl99-dbs'),
           'help' => _x('<p>The folder must already be created for you to successfully reference it here and have permissions for PHP to write to.<br/>For security purposes, consider referencing to a folder that exists above your <code>www/public_html</code> folder</p>', 'field help: file_name', 'lvl99-dbs'),
           'help_after' => _x('<p>Tags you can use within the path:</p>', 'field help after: file_name', 'lvl99-dbs').'
 <ul><li><code>{ABSPATH}</code> ' . sprintf( _x('The absolute path to the WordPress installation (references <code>ABSPATH</code> constant)<br/>Current: <code>%s</code>', 'field help: path {ABSPATH} tag', 'lvl99-dbs'), ABSPATH) . '</li><li><code>{get_home_path}</code> ' . sprintf( _x('The path to the WordPress\'s installation (references function <code>get_home_path()</code>\'s return value)<br/>Current: <code>%s</code>', 'field help: path {get_home_path} tag', 'lvl99-dbs'), get_home_path() ) . '</li>
-<li><code>{WP_CONTENT_DIR}</code> ' . sprintf( _x('The path to the wp-content folder (references <code>WP_CONTENT_DIR</code> constant)<br/>Current: <code>%s</code>', 'field help: path {WP_CONTENT_DIR} tag', 'lvl99-dbs'), WP_CONTENT_DIR ) . '</li></ul>',
+<li><code>{content_dir}</code> ' . sprintf( _x('The path to the wp-content folder (references plugin\'s <code>content_dir</code> function)<br/>Current: <code>%s</code>', 'field help: path {content_dir} tag', 'lvl99-dbs'), $this->content_dir() ) . '</li></ul>',
           // 'show_previous_value' => TRUE,
         ),
 
@@ -355,14 +377,14 @@ if ( !class_exists( 'LVL99_DBS' ) )
          */
         'file_name' => array(
           'sanitise_callback' => array( $this, 'sanitise_option_file_name' ),
-          'default' => '{date:YmdHis} {env} {url} {database}.sql',
+          'default' => '{date:Y-m-d H.i.s} {env} {domain} {database}.sql',
           'field_type' => 'text',
           'label' => _x('SQL file name format', 'field label: file_name', 'lvl99-dbs'),
           'help_after' => '<p>' . _x('Tags you can use within the file name:', 'field help: file_name', 'lvl99-dbs') . '</p>
 <ul><li><code>{date:<i>...</i>}</code> ' . _x('Replace <code>...</code> with a string representing the date output according to <a href="http://au1.php.net/manual/en/function.date.php" target="_blank">PHP\'s date() function</a>.<br/><b>Note:</b> You cannot use additional semi-colons or curly braces within this tag.', 'field help: file_name {code} tag', 'lvl99-dbs') . '</li>
 <li><code>{env}</code> ' . _x('The environment that the site is running in (references constant <code>WP_ENV</code>)', 'field help: file_name {env} tag', 'lvl99-dbs') . '</li>
 <li><code>{database}</code> ' . _x('The name of the database', 'field help: file_name {database} tag', 'lvl99-dbs').'</li>
-<li><code>{url}</code> ' . _x('The URL of the website (references constant <code>home_url()</code> function)', 'field help: file_name {url} tag', 'lvl99-dbs') . '</li></ul>',
+<li><code>{domain}</code> ' . _x('The website domain (determined from <code>home_url()</code> function)', 'field help: file_name {domain} tag', 'lvl99-dbs') . '</li></ul>',
         ),
 
         /*
@@ -482,7 +504,7 @@ if ( !class_exists( 'LVL99_DBS' ) )
       $path = $this->replace_tags( $path, array(
         'ABSPATH' => trailingslashit(ABSPATH),
         'get_home_path' => trailingslashit(get_home_path()),
-        'WP_CONTENT_DIR' => trailingslashit(WP_CONTENT_DIR),
+        'content_dir' => trailingslashit($this->content_dir()),
       ) );
 
       // Remove duplicate slashes
@@ -1326,9 +1348,12 @@ if ( !class_exists( 'LVL99_DBS' ) )
     {
       if ( !$file_name || !is_string($file_name) ) $file_name = $this->get_option('file_name');
 
+      $url_bits = parse_url( home_url('/') );
+
       // Replace tags
       $output_file_name = $this->replace_tags( $file_name, array(
-        'url' => untrailingslashit( preg_replace('/[a-z]+\:\/\//', '', home_url('/') ) ),
+        'url' => untrailingslashit( preg_replace('/https?\:\/\//', '', home_url('/') ) ),
+        'domain' => $url_bits['host'],
         'env' => defined('WP_ENV') ? WP_ENV : '',
         'database' => DB_NAME,
       ) );
